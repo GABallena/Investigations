@@ -1,0 +1,364 @@
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{authblk}
+\usepackage{setspace}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {./figures/} }
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{lineno}
+\linenumbers
+\nonstopmode
+
+
+%%%%%% Bibliography %%%%%%
+% Replace "sample" in the \addbibresource line below with the name of your .bib file.
+\usepackage[style=nejm, 
+citestyle=numeric-comp,
+sorting=none]{biblatex}
+\addbibresource{sample.bib}
+
+%%%%%% Title %%%%%%
+% Full titles can be a maximum of 200 characters, including spaces. 
+% Title Format: Use title case, capitalizing the first letter of each word, except for certain small words, such as articles and short prepositions
+\title{Something Analysis Reveals ARG shenanigans across Metro Manila}
+
+%%%%%% Authors %%%%%%
+% Authors should be listed in order of contribution to the paper, by full first name, then middle initial (if any), followed by last name and separated by commas.
+% Please do not use initials for first names. If you use your middle name as a full name, use an initial for the first name and spell out your full middle name.
+% Use a superscript asterisk (*) to identify the corresponding author and be sure to include that person’s e-mail address. Use symbols (in this order: †, ‡, §, ||, ¶, #, ††, ‡‡, etc.) for author notes, such as present addresses, “These authors contributed equally to this work” notations, and similar information.
+% You can include group authors, but please include a list of the actual authors (the group members) in the Supplementary Materials.
+\author[1*$\dag$]{Author One}
+\author[2$\dag$]{Author Two}
+\author[2]{Author Three}
+\author[1,2]{Author Four}
+
+%%%%%% Affiliations %%%%%%
+\affil[1,2,3,4]{College of Public Health, University of the Philippines Manila, Metro Manila, Philippines.}
+\affil[1]{Department of Medical Microbiology, University of the Philippines Manila}
+\affil[3]{Department of , University }
+\affil[*]{Address correspondence to: email@email.com}
+\affil[$\dag$]{These authors contributed equally to this work.}
+
+%%%%%% Date %%%%%%
+% Date is optional
+\date{Month/DD/YYYY}
+
+%%%%%% Spacing %%%%%%
+% Use paragraph spacing of 1.5 or 2 (for double spacing, use command \doublespacing)
+\onehalfspacing
+
+\begin{document}
+	
+	\maketitle
+	
+	%%%%%% Abstract %%%%%%
+	\begin{abstract}
+		Cool opening sentence that states problem and how this paper addresses it.
+		
+		Context yada yada
+		
+		Our approach, highlight novelty and/or significance. 
+		
+		200-300 word abstract that expands abbreviations: ARG (Antimicrobial resistance genes).
+		
+		Brief statement of primary results or theoretical benefits.
+		Short conclusion.
+		
+		
+	\end{abstract}
+	
+	%%%%%% Main Text %%%%%%
+	
+	\section{Introduction}
+	
+	
+	\begin{description} 
+		\item [Cool eye-catchy headline]
+		\item [Context] Brief explanation of importance of ARGs must explain eloquently to a wider audience.
+		\item [Current status in science] Mention the current methods used, their findings, and their limitations.
+		\item[Details on ARGs] More specific information:
+		\begin{itemize}
+			\item Mechanisms of spreads
+			\item Difficulty in combating it
+			\item Importance of surveillance
+			\item Where current approaches fall short
+			\item What makes our study worth it or at least useful
+		\end{itemize}
+		
+		
+	\end{description}
+	
+	
+	\textbf{Note}: explain in a way that is understandable to audiences without technical background. 
+	
+	\textbf{Note}: ensure to clarify to reviewer 2 why the implications of doing this study is important. Cause they often ask why it is important to the journal we are trying to get into.
+	
+	
+	%%%%% Citations in the text %%%%%%
+	\subsection*{Citations}
+	Just make sure you follow the citation rules they want, it's usually APA 6th Edition depending on the journal - use a bibliography manager to make your life easier. 
+	
+	%%%%%% Equations %%%%%%
+	
+	%%%%% Couple of notes
+	\subsection*{Figures and Tables labeling notes}
+	\begin{itemize}
+		\item Tables are labeled at the top.
+		\item Figures are labeled at the bottom.
+	\end{itemize}
+	
+	
+	
+	\subsection*{Equations}
+	Equations should be provided in a text format, rather than as an image. Equations should be numbered consecutively, in round brackets, on the right-hand side of the page by using the `\textbackslash begin\{equation\}'' command. They should be referred to as Equation 1, etc. in the main text.
+	
+	\medskip For example, see Equation \ref{eq:1} and Equation \ref{eq:2} below.
+	\begin{equation} \label{eq:1}
+		a^2 + b^2 = c^2 
+	\end{equation}
+	\begin{equation} \label{eq:2}
+		\begin{split}
+			A & = \frac{\pi r^2}{2} \\
+			& = \frac{1}{2} \pi r^2
+		\end{split}
+	\end{equation}
+	
+	%%%%%% Figures %%%%%%
+	
+	
+	
+	\subsection*{Figures}
+	
+	\subsubsection*{Data visualization guidelines}
+	\begin{itemize}
+		\item Focus on showing trends; R can achieve this using a sort function.
+		\item Use jitter or violin plots instead of standard boxplots for better clarity.
+		\item Remove background clutter like grid lines when possible.
+		\item Emphasize if you are using log-transformed axes.
+		\item \textbf{Use color-blind friendly color palettes.}
+		\item \textbf{Ensure the figure is interpretable with minimal context.}
+		\item Split the figure into multiple panels if necessary to improve clarity.
+		\item Account for potential sources of bias, e.g., population size or density.
+		\item \textbf{Never use 3D visualizations.}
+		\item \textbf{Never cut axes—use a log transform if needed.}
+		\item Avoid circular plots (e.g., pie charts, spider diagrams); \textbf{humans are bad at estimating relative abundances.}
+		\item \textbf{Always include a threshold, sweet spot, or some form of guidance for interpretation.}
+	\end{itemize}
+	
+	
+	\subsubsection*{General guidelines}
+	\begin{itemize}
+		\item \textbf{Figures should be called out based on when they are referenced.}
+		\item Every figure must have a descriptive title beginning with `Figure [Number] …''
+		\item All figure titles should be either a phrase or a sentence; do not mix the two styles.
+		\item Start each caption with Fig./Table.[Number]
+		\item Captions must be in full sentences \textless 200 words
+		\item \textbf{Nomenclature, abbreviations, symbols and units must be included in the text and must be consistent with that used in the text}
+		\item Place legends immediately after each figure \textless 200 words 
+		\item \textbf{Figures should be readable in either two (half page width) or one columns (full page witdth); highly depends on the journal. }
+		\item Subfigures, if any, should be ordered logically with roman letters (A,B,C, etc.,)
+		\item \textbf{Prepare electronic copies for the figures alone, in case the reviewers request them}
+		\begin{itemize}
+			\item Most be in either PDF, PostScript (PS), or Encapsulated PS format
+			\item For microscopy: PDF, TIFF, JPEG, PNG, PhotoShop (PSD), or EPS
+			\item Images should be \textgreater 300 dpi
+			\item Images and labels should be embedded in separate layers
+			\item \textbf{Recommended} post your figures in public repository like FigShare and raw metadata on repositories like Zenodo (free) or Dryad (can be subsidized if your University is a Dryad member).
+		\end{itemize}
+		\item Make sure include statistical tests and variables used.
+	\end{itemize}
+	
+	\begin{figure}[h]
+		\centering
+		%  		\includegraphics[width=0.5\textwidth]{fig 1}
+		\caption{Short title of the figure. The figure legend should begin with a title (an overall description of the figure) followed by additional text. Each legend should be placed immediately after its corresponding figure.}
+		\label{fig:1}
+	\end{figure}
+	
+	
+	\begin{figure}[h]
+		\centering
+		\caption{Example caption using multiple panels.     (\subref{fig:2A}) FiX.A shows (describe figure and legend)(\subref{fig:2B}) FigX.B shows (describe the figure and legends)}.
+		\label{fig:2}
+	\end{figure}
+	
+	%%%%%% Tables %%%%%%
+	\subsection*{Tables}
+	\subsubsection*{General guidelines}
+	\begin{itemize}
+		\item \textbf{Tables are meant to supplement NOT duplicate the text}
+		\item They are listed in order of citation in the text
+		\item Starts with \textbf{descriptive title } followed by Table [Number]
+		\item Include units in column heading, per vertical column
+		\item \textbf{Include units} in column headings in parenthesis
+		\item \textbf{Do not change units within columns} - convert or normaize if you have to
+		\begin{itemize}
+			\item Avoid using vertical rules/grid lines between columns use tab-delimited spacing instead
+			\item Spare vertical gridlines for headers
+			\item \textbf{Recommended} Do not use footnotes in column heads
+			\begin{itemize}
+				\item include captions in sentence form on at the legend
+				\item footnotes must contain information relevant to specific cells
+				\item use lowercase letters in alphabetical order
+			\end{itemize}
+			\item If table is very large, use centered headings to split the tables into groups
+		\end{itemize}
+	\end{itemize}		
+	
+	
+	\begin{table}[b]
+		\caption{This is an example table.}    
+		\centering
+		\begin{tabular}{ccc}
+			\hline
+			Column 1 & Column 2 & Column 3 \\  
+			\hline
+			Cell 1 & Cell 2 & Cell 3\\ 
+			Cell 4 & Cell 5 & Cell 6 \\
+			\hline
+		\end{tabular}
+		
+		\label{tab:1}
+	\end{table}
+	
+	\section{Results}
+	Describe all experiments then all its associated findings - simple.
+	
+	
+	\begin{itemize}
+		\item No new data should be presented in Discussion section.All tables and figures should be in the correct order they are referenced. 
+		\item Subheadings must be either all complete sentences or all phrases \textless 10 words, no punctuations allowed.
+	\end{itemize}
+	
+	\section{Discussion}
+	\begin{itemize}
+		\item Summarize (but don't just repeat) your conclusions and their implications.
+		\item Dedicate a paragraph outlining the limitations of the study and its interpretations.
+		\item Include steps to be taken for the findings to be applied.
+		\item \textbf{Recommended:} Avoid claims of priority.  
+	\end{itemize}
+	
+	
+	\section{Materials and Methods}
+	
+	\begin{itemize}
+		\item Must have sufficient information to allow replication.
+		\item Should be broken up into subheadings
+		\item In cases where it is too lengthy, they recommend you put some of it in Supplementary Materials
+	\end{itemize}
+	
+	
+	\subsection{Experimental Design}
+	Describe objectives and pre-specified requirements.
+	
+	\subsection{Statistical Analysis (Optional)}
+	Add enough detail that a proficient stat expert can replicate the findings with enough data.
+	
+	\subsection{Ethical Statements}
+	For investigations on humans, a statement must be including indicating that informed consent was obtained after the nature and possible consequences of the study was explained.
+	
+	For authors using experimental animals, a statement must be included indicating that the animals’ care was in accordance with institutional guidelines.
+	
+	\section*{Acknowledgments}
+	Anyone who made a contribution to the research or manuscript, but who is not a listed author, should be acknowledged (with their permission). Types of acknowledgements include:
+	
+	\subsection*{General Acknowledgments} 
+	Thank others for any contributions, whether it be direct technical help or indirect assistance
+	
+	\medskip Examples:
+	
+	`The original team that conceived the idea.''
+	
+	`The engineering departments that helped pinpoint locations in sample collection.''
+	
+	`Authors that indirectly contributed to make experiments possible.'' 
+	
+	--\underline{\hspace{5cm}} lab leader for letting us borrow equipment."	
+	\subsection*{Author Contributions} 
+	Describe contributions of each author to the paper, using the first initial and full last name. 
+	
+	\medskip Examples:
+	
+	`\underline{\hspace{5cm}} conceived the original idea.
+	.''
+	
+	`\underline{\hspace{5cm}} conducted the experiments.''
+	
+	`\underline{\hspace{5cm}} authors contributed equally to the writing of the manuscript.''
+	
+	
+	
+	\subsection*{Funding}
+	Name financially supporting bodies (written out in full), followed by the funding awardee and associated grant numbers (if applicable) in square brackets. 
+	
+	\medskip Example: 
+	
+	`This work was supported by the \underline{\hspace{5cm}} Research Council [grant numbers xxxx, yyyy]; the \underline{\hspace{5cm}} [grant number zzzz]; and a \underline{\hspace{5cm}} Project Grant.'' 
+	
+	\medskip
+	If the research did not receive specific funding, but was performed as part of the employment of the authors, please name this employer. If the funder was involved in the manuscript writing, editing, approval, or decision to publish, please declare this.
+	
+	\subsection*{Conflicts of Interest} 
+	
+	Authors must declare all potential interests – whether or not they actually had an influence in this section.They must also explain why the interest may be a conflict. Authors must declare current or recent funding (including for Article Processing Charges) and other payments, goods or services that might influence the work. All funding, whether a conflict or not, must be declared in a `Funding Statement.'' 
+	
+	This includes: 
+	\begin{itemize}
+		\item Authors who have an interest in the outcome of the work or,
+		\item authors affiliated to an organization with such an interest or,
+		\item was previously paid or employed by a funder in commissioning, conception, planning, design, conduct, analysis, publishing, and/or decision to publish. 
+		\item \textbf{Recommended:} Avoid claims of priority.  
+	\end{itemize}
+	
+	Otherwise, state something like `The author(s) declare(s) that there is no conflict of interest regarding the publication of this article.''
+	
+	
+	\subsection*{Data Availability}
+	This is compulsory nowadays. This statement describes whether and how others can access the data supporting the findings of the paper. The database should include
+	
+	\begin{itemize}
+		\item Nature of the data 
+		\item Where it can be accessed
+		\item Data restrictions and why
+		\item Accession numbers or placeholders for it
+		\item Materials that must be obtained through a Material Transfer Agreement (MTA)
+	\end{itemize}
+	
+	
+	
+	\section*{Supplementary Materials}
+	Includes: figures, tables, clips, voice recordings, etc. not included in the paper. 
+	
+	So the usual format is Figures > Tables > Other files; but highly dependent on the when they are referenced in the paper
+	
+	\medskip Example:
+	Fig. S1. Title of the first supplementary figure.
+	
+	Fig. S2. Title of the second supplementary figure.
+	
+	Table S1. Title of the first supplementary table.
+	
+	Data file S1. Title of the first supplementary data file.
+	
+	Movie S1. Title of the first supplementary movie.
+	
+	\medskip
+	\textbf{Recommended}: cite specific sections not general sections
+	
+	Provide a link to access the supplementary materials
+	
+	Supplementary Materials may include additional author notes
+	
+	\section*{Guidelines for References}
+	Style depends on the publisher.
+	
+	"Data not shown" is allowed if applicable
+	
+	References between Supplementary Materials and main text are not separate, they are included 
+	
+	\printbibliography
+	
+\end{document}
