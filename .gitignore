@@ -1,5 +1,10 @@
 # Ignore everything
 *
+# folders 
+!configs/
+!env/
+!env/*.yaml
+!configs/*.yaml
 
 # Don't ignore .gitignore itself
 !.gitignore
@@ -12,9 +17,21 @@
 !*.yaml
 !*.R
 !*.tex
+!*.gitignore
+!*.md
+!*.ini
+!*.txt
+!*.json
+!*.yml
+!*.docker
+!*.pm
+!*.html
+!*Snakefile
+!*Dockerfile
+!*.csv
+!*.tsv
+!*.js
+!*.cpp
+!*.hpp
+!*.php
 
-# Ignore CAMISIM directory
-CAMISIM/
-!env_yamls
-!Project4/
-!Side/
