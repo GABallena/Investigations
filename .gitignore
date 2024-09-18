@@ -1,10 +1,6 @@
+# GNU nano 7.2                                                                                                                            
 # Ignore everything
 *
-# folders 
-!configs/
-!env/
-!env/*.yaml
-!configs/*.yaml
 
 # Don't ignore .gitignore itself
 !.gitignore
@@ -34,4 +30,4 @@
 !*.cpp
 !*.hpp
 !*.php
-
+!*.sh
