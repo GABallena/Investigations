@@ -6,12 +6,12 @@
 !.gitignore
 
 # Don't ignore the .env directory and its contents
-!.env/
-!.env/*
+!env/
+!env/*
 
 # Don't ignore the .scripts directory and its contents
-!.scripts/
-!.scripts/*
+!scripts/
+!scripts/*
 
 
 
