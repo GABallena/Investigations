@@ -1,3 +1,6 @@
+# Include the other Snakefile
+include: "what_distribution.smk"
+
 # Define paths to the UniVec, PhiX, and 1000 Genomes databases
 CONTAM_DB="databases/UniVec"
 PHIX_DB="databases/PhiX"
@@ -165,7 +168,7 @@ rule normalize_scgs_by_kmer:
     script:
         "scripts/normalize_scgs_wavelet.py"
 
-# Segway 1: Determining Normality
+# Segway 1: A "few" tests
 rule check_distribution:
     input:
         "kmer_counts.txt"
@@ -228,6 +231,18 @@ rule best_fit:
     conda: "env/distribution.yaml"
     script:
         "what_distribution.smk"
+
+
+# Best fit and alpha
+rule best_fit_plus_alpha:
+    input:
+        "fit_results.tsv",
+        "goodness_of_fit.txt"
+    output:
+        "best_fit_and_alpha.txt"  # Define where to store the best fit model and optimal alpha
+    script:
+        "scripts/bestfit_and_alpha.py"  # Path to your script
+
 
 
 # Step 13.1: 
