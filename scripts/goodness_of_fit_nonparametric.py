@@ -15,7 +15,7 @@ def goodness_of_fit_tests(data):
 
     # Kolmogorov-Smirnov Test for Uniform Distribution
     ks_stat, ks_p_value = stats.kstest(data, 'uniform')
-    results['KS Test (Uniform)'] = {'Statistic': ks_stat, 'p-value': ks_p_value}
+    results['KS Test (Uniform)'] = {'Statistic': ks_stat, 'P-value': ks_p_value}
 
     # Anderson-Darling Test for Uniform Distribution
     ad_stat, critical_values, sig_level = stats.anderson(data, dist='uniform')
@@ -23,7 +23,7 @@ def goodness_of_fit_tests(data):
 
     # Kolmogorov-Smirnov Test for Exponential Distribution
     ks_stat_exp, ks_p_value_exp = stats.kstest(data, 'expon')
-    results['KS Test (Exponential)'] = {'Statistic': ks_stat_exp, 'p-value': ks_p_value_exp}
+    results['KS Test (Exponential)'] = {'Statistic': ks_stat_exp, 'P-value': ks_p_value_exp}
 
     # Anderson-Darling Test for Exponential Distribution
     ad_stat_exp, critical_values_exp, sig_level_exp = stats.anderson(data, dist='expon')
@@ -34,9 +34,7 @@ def goodness_of_fit_tests(data):
     for _ in range(1000):
         boot_sample = np.random.choice(data, size=len(data), replace=True)
         bootstrapped_means.append(np.mean(boot_sample))
-    results['Bootstrapped Means (Uniform)'] = np.mean(bootstrapped_means)
-
-    # Add similar bootstrapping for other distributions as needed...
+    results['Bootstrapped Means (Uniform)'] = {'Mean': np.mean(bootstrapped_means)}
 
     return results
 
@@ -44,9 +42,20 @@ def goodness_of_fit_tests(data):
 results = goodness_of_fit_tests(kmer_counts)
 
 # Output results to a file
-with open("goodness_of_fit.txt", 'w') as f:
-    for test, result in results.items():
-        f.write(f"{test}: {result}\n")
+with open("goodness_of_fit.txt", 'w') as f:  # Use the standard file name
+    # Write Kolmogorov-Smirnov test results
+    f.write(f"KS Test (Uniform): Statistic={results['KS Test (Uniform)']['Statistic']}, P-value={results['KS Test (Uniform)']['P-value']}\n")
+    f.write(f"KS Test (Exponential): Statistic={results['KS Test (Exponential)']['Statistic']}, P-value={results['KS Test (Exponential)']['P-value']}\n")
 
+    # Write Anderson-Darling test results
+    f.write(f"Anderson-Darling Test (Uniform): Statistic={results['Anderson-Darling Test (Uniform)']['Statistic']}, Critical Values={results['Anderson-Darling Test (Uniform)']['Critical Values']}\n")
+    f.write(f"Anderson-Darling Test (Exponential): Statistic={results['Anderson-Darling Test (Exponential)']['Statistic']}, Critical Values={results['Anderson-Darling Test (Exponential)']['Critical Values']}\n")
 
-print("Goodness-of-fit tests completed.")
+    # Write Bootstrapping results
+    f.write(f"Bootstrapped Means (Uniform): Mean={results['Bootstrapped Means (Uniform)']['Mean']}\n")
+
+# Create a flag file to indicate the non-parametric test was completed
+with open("nonparametric_test_done.flag", 'w') as flag_file:
+    flag_file.write("Non-parametric goodness of fit test completed.\n")
+
+print("Non-parametric goodness-of-fit test completed and flag created.")
