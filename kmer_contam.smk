@@ -1,3 +1,6 @@
+GENESTOFIND="link"
+
+
 rule all:
     input:
         "results/cleaned_spikes_assembled.fasta",
@@ -10,7 +13,8 @@ rule download_marker_genes:
     shell:
         """
         # Example: Replace this with the actual source of your marker genes
-        wget -O {output} "https://example.com/universal_single_copy_genes.fasta"
+        mkdir -p databases
+        aria2 -x 16 ~/.Database/$GENESTOFIND 
         """
 
 # Step 2: Generate k-mers from the marker genes

@@ -1,24 +1,28 @@
 import numpy as np
 import pywt
+from scipy.stats import zscore
 
-# Load k-mer counts from the input file (results/kmer_stats.txt)
-# For simplicity, let's assume this file has one k-mer count per line
+# Load k-mer counts from the input file
 kmer_counts = np.loadtxt('results/kmer_stats.txt')
 
-# Apply continuous wavelet transform (CWT) to k-mer counts
+# Apply continuous wavelet transform (CWT)
 wavelet_name = 'morl'
-widths = np.arange(1, 20)  # Adjust based on the scales of interest
-
+widths = np.arange(1, 20)
 coefficients, frequencies = pywt.cwt(kmer_counts, widths, wavelet_name)
 
-# Filter out small-scale coefficients (e.g., repetitive or noisy regions)
-threshold_scale = 5  # Example threshold for filtering small signals
-filtered_coefficients = np.where(widths < threshold_scale, 0, coefficients)
+# Calculate Z-scores for wavelet coefficients
+z_scores = zscore(coefficients, axis=0)
 
-# Use filtered coefficients for normalization (taking mean over all relevant scales)
-normalized_scgs = np.mean(filtered_coefficients, axis=0)
+# Set a p-value threshold for significant wavelets (corresponding to p=0.05)
+threshold = 1.96  # Z-score for p = 0.05 in a two-tailed test
 
-# Save normalized SCG counts to output file
+# Filter out wavelet coefficients with Z-scores below the threshold
+significant_coefficients = np.where(np.abs(z_scores) >= threshold, coefficients, 0)
+
+# Calculate normalized SCGs from the significant wavelet coefficients
+normalized_scgs = np.mean(significant_coefficients, axis=0)
+
+# Save normalized SCG counts
 np.savetxt('results/wavelet_normalized_scgs.txt', normalized_scgs)
 
-print("Wavelet-based SCG normalization complete.")
+print("Wavelet-based SCG normalization with p-value filtering complete.")
