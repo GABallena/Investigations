@@ -1,10 +1,18 @@
 # Include the other Snakefile
 include: "what_distribution.smk"
 
-# Define paths to the UniVec, PhiX, and 1000 Genomes databases
-CONTAM_DB="databases/UniVec"
-PHIX_DB="databases/PhiX"
-GENOME_1000_DB="databases/1000_genomes"
+# Configuration Parameters
+CONTAM_DB = "databases/UniVec"
+PHIX_DB = "databases/PhiX"
+GENOME_1000_DB = "databases/1000_genomes"
+
+# BUSCO Parameters
+BUSCO_MODE = "genome"  # Mode for BUSCO (genome, proteins, transcriptome)
+BUSCO_LINEAGE = "bacteria_odb10"  # Example lineage for BUSCO
+BUSCO_THREADS = 4  # Number of CPU threads for BUSCO
+BUSCO_EVALUE = "1e-05"  # E-value cutoff for BUSCO
+BUSCO_OUT_NAME = "busco_validation"  # Output name for BUSCO runs
+
 
 rule all:
     input:
@@ -38,15 +46,18 @@ rule run_busco_all:
     output:
         directory("busco_outputs")
     conda:
-        "env/busco_env.yaml"  # Using the BUSCO environment
+        "env/busco_env.yaml"  # Use the BUSCO environment
     shell:
         """
-        mkdir -p busco_outputs
-        # Run BUSCO on all available datasets
-        for dataset in $(ls /path/to/busco_downloads); do
-            busco -i {input} -o busco_outputs/${dataset} -l /path/to/busco_downloads/$dataset -m genome
-        done
+        mkdir -p {output}
+        
+        # Run BUSCO with specified parameters
+        busco -i {input} -m {BUSCO_MODE} -l {BUSCO_LINEAGE} -o {BUSCO_OUT_NAME} -c {BUSCO_THREADS} --evalue {BUSCO_EVALUE} --force --tar --restart --offline
+        
+        # Move results to the output folder
+        mv {BUSCO_OUT_NAME}* {output}/
         """
+
 
 # Step 3: Generate k-mers for SCGs using Jellyfish
 rule generate_scg_kmers:
@@ -245,26 +256,17 @@ rule best_fit_plus_alpha:
 
 
 
-# Step 13.1: 
-rule parametric_workflow:
+# Step 13: Unified workflow for parametric and non-parametric tests
+rule unified_statistical_workflow:
     input:
         contam="results/wavelet_normalized_contam.txt",
-        scgs="results/wavelet_normalized_scgs.txt"
+        scgs="results/wavelet_normalized_scgs.txt",
+        bestfit_alpha="results/bestfit_alpha.json"
     output:
-        "results/t_test_results.txt"
+        "results/statistical_test_results.txt",
         ambiguous_sequences="results/ambiguous_sequences.txt"
     script:
         "scripts/compare_wavelets_stats.py"
-
-#Step 13.2: 
-rule non_parametric_workflow:
-    input:
-        "kmer_counts.txt",
-        "goodness_of_fit_results.txt"
-    output:
-        "non_parametric_results.txt"
-    script:
-        "scripts/non_parametric_analysis.py"
 
 
 
@@ -281,6 +283,7 @@ rule filter_ambiguous_sequences:
         grep -vFf {input.ambiguous} {input.assembled} > {output}
         """
 
+
 # Step 15: Re-run BUSCO to validate SCG retention after filtering
 rule rerun_busco:
     input:
@@ -288,12 +291,16 @@ rule rerun_busco:
     output:
         directory("busco_validation_outputs")
     conda:
-    "env/busco_env.yaml"  # Using the BUSCO environment
+        "env/busco_env.yaml"  # Use the BUSCO environment
     shell:
         """
-        mkdir -p busco_validation_outputs
-        # Run BUSCO again on the high-fidelity reads to check SCG retention
-        for dataset in $(ls /path/to/busco_downloads); do
-            busco -i {input} -o busco_validation_outputs/${dataset} -l /path/to/busco_downloads/$dataset -m genome
-        done
+        mkdir -p {output}
+        
+        # Run BUSCO with specified parameters
+        busco -i {input} -m {BUSCO_MODE} -l {BUSCO_LINEAGE} -o {BUSCO_OUT_NAME} -c {BUSCO_THREADS} --evalue {BUSCO_EVALUE} --force --tar --restart --offline
+        
+        # Move results to the output folder
+        mv {BUSCO_OUT_NAME}* {output}/
         """
+
+
