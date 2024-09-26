@@ -27,13 +27,15 @@ rule goodness_of_fit_parametric:
     input:
         "fitted_distributions.txt"
     output:
-        "goodness_of_fit.txt"
+        "goodness_of_fit.txt",
+        "parametric_test_done.flag"  # Flag for parametric test completion
     script:
         "scripts/goodness_of_fit_parametric.py"
 
 rule best_alpha_parametric:
     input:
-        "goodness_of_fit.txt"
+        "goodness_of_fit.txt",
+        "parametric_test_done.flag"  # Only run if parametric test was done
     output:
         "best_alpha_parametric.txt"
     script:
@@ -44,13 +46,15 @@ rule goodness_of_fit_nonparametric:
     input:
         "kmer_counts.txt"
     output:
-        "goodness_of_fit.txt"
+        "goodness_of_fit.txt",
+        "nonparametric_test_done.flag"  # Flag for non-parametric test completion
     script:
         "scripts/goodness_of_fit_nonparametric.py"
 
 rule best_alpha_nonparametric:
     input:
-        "goodness_of_fit.txt"
+        "goodness_of_fit.txt",
+        "nonparametric_test_done.flag"  # Only run if non-parametric test was done
     output:
         "best_alpha_nonparametric.txt"
     script:
