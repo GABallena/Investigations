@@ -1,0 +1,6 @@
+name: mhm2_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+prefix: /home/gerald-amiel/miniconda3/envs/mhm2_env
