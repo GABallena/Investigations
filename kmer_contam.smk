@@ -165,16 +165,92 @@ rule normalize_scgs_by_kmer:
     script:
         "scripts/normalize_scgs_wavelet.py"
 
-# Step 13: Perform t-test or Z-test between contaminant and SCG wavelets to detect ambiguous areas
-rule perform_statistical_test:
+# Segway 1: Determining Normality
+rule check_distribution:
+    input:
+        "kmer_counts.txt"
+    output:
+        rule check_distribution:
+    input:
+        "kmer_counts.txt"
+    output:
+        "distribution_check.txt"
+    script:
+        "scripts/normality_test.py"
+
+rule fit_alternate_distributions:
+    input:
+        "distribution_check.txt"
+    output:
+        "fitted_distributions.txt"
+    script:
+        "scripts/fit_distributions.py"
+
+rule transform_data_if_needed:
+    input:
+        "fitted_distributions.txt"
+    output:
+        "transformed_data.txt"  
+    script:
+        "scripts/goodness_of_fit.py"  
+
+rule goodness_of_fit_parametric:
+    input:
+        "fitted_distributions.txt"
+    output:
+        "goodness_of_fit.txt" 
+    script:
+        "scripts/goodness_of_fit.py"  
+
+rule non_parametric_workflow:
+    input:
+        "fitted_distributions.txt"
+    output:
+        "non_parametric_results.txt"
+    script:
+        "scripts/non_parametric_analysis.py"
+
+rule goodness_of_fit_nonparametric:
+    input:
+        "kmer_counts.txt"
+    output:
+        "goodness_of_fit.txt"  
+    script:
+        "scripts/goodness_of_fit_nonparametric.py"
+
+rule best_fit:
+    input:
+        "kmer_counts.txt"
+    output:
+        "fit_results.tsv" 
+    script:
+        "best_fit.py"
+    conda: "env/distribution.yaml"
+    script:
+        "what_distribution.smk"
+
+
+# Step 13.1: 
+rule parametric_workflow:
     input:
         contam="results/wavelet_normalized_contam.txt",
         scgs="results/wavelet_normalized_scgs.txt"
     output:
-        "results/t_test_results.txt",
+        "results/t_test_results.txt"
         ambiguous_sequences="results/ambiguous_sequences.txt"
     script:
         "scripts/compare_wavelets_stats.py"
+
+#Step 13.2: 
+rule non_parametric_workflow:
+    input:
+        "kmer_counts.txt",
+        "goodness_of_fit_results.txt"
+    output:
+        "non_parametric_results.txt"
+    script:
+        "scripts/non_parametric_analysis.py"
+
 
 
 # Step 14: Filter ambiguous sequences and keep only high-quality reads
