@@ -4,6 +4,11 @@
 
 # Don't ignore .gitignore itself
 !.gitignore
+!.env/
+!.env/*.
+!.scripts/
+!.scripts/*.
+
 
 # Unignore specific file types and directories
 !*.bash
