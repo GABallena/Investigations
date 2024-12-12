@@ -1,0 +1,173 @@
+\documentclass{article}
+\usepackage[
+a4paper,
+margin=0.75in
+]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+
+
+\title{Sampling Strategy for Wastewater Study}
+\author{}
+\date{}
+
+\begin{document}
+	
+	\maketitle
+	
+	\section{Introduction}
+	When conducting environmental sampling, particularly in wastewater studies, determining an optimal sampling strategy is crucial. Here we discuss two common strategies: (1) random sampling followed by stratification and (2) stratified sampling to guide data collection. Each approach has advantages and limitations depending on study goals and the need for control over environmental variability.
+	
+\begin{tcolorbox}[title=Why randomize? \dotfill Nov 4 2024]
+	Sampling bias is one form of \href{https://karger.com/nec/article/115/2/c94/830450/Selection-Bias-and-Information-Bias-in-Clinical}{sampling bias}—which typically occurs in non-random sampling. This is such a concern that randomization of subjects and cohort assignment is done in various epidemiological studies \href{https://www.ncbi.nlm.nih.gov/books/NBK574513/}{[1]}. In our study, the cohort could be sampling sites with similar characteristics, and site selection is equivalent to inclusion criteria (i.e., Metro Manila Sites).
+\end{tcolorbox}
+	
+	\section{Sampling Strategies}
+	
+	\subsection{Random Sampling First, Then Stratify in Groups}
+\begin{multicols}{2}
+	\subsubsection*{Advantages}
+	\begin{itemize}
+		\item \textbf{Minimizes sampling bias}: Since sites are chosen randomly, there is less risk of unintentionally favoring certain conditions or locations.
+		\item \textbf{Reflects natural variability}: Random sampling captures the natural distribution of environmental conditions, providing a more representative snapshot of the real-world situation.
+		\item \textbf{Easier and quicker}: Logistically, random sampling requires less planning and can be implemented without extensive prior knowledge of site-specific conditions.
+	\end{itemize}
+	\columnbreak
+	\subsubsection*{Disadvantages}
+	\begin{itemize}
+		\item \textbf{Less control over specific conditions}: Random sampling may lead to underrepresentation of certain conditions (e.g., sites with recent rain or specific pH levels), creating gaps in data.
+		\item \textbf{Post-stratification imbalance}: When attempting to stratify after sampling, certain strata (such as rain or no rain) may be under-sampled, limiting the power of comparisons.
+	\end{itemize}
+\end{multicols}	
+	
+\begin{tcolorbox}[title=Complete Randomization is best for \dotfill]
+	\begin{itemize}
+		\item Exploratory studies aimed at capturing a general overview of conditions across sites.
+		\item Situations where there is little prior knowledge about the variability in environmental conditions.
+	\end{itemize}
+\end{tcolorbox}	
+\newpage
+	\subsection{Stratify by Conditions (e.g., Rain) to Guide Sampling}
+\begin{multicols}{2}
+	\subsubsection{Advantages}
+	\begin{itemize}
+		\item \textbf{Ensures representation of specific conditions}: By stratifying conditions like rain, pH, or source type upfront, balanced sampling is achieved, ensuring adequate data under each condition.
+		\item \textbf{Enables direct comparisons}: Stratified sampling allows for meaningful comparisons between conditions, which strengthens the study design.
+		\item \textbf{Improves statistical power for hypothesis testing}: Pre-stratification prevents data gaps, supporting robust hypothesis testing for each environmental condition.
+	\end{itemize}
+	\columnbreak
+	\subsubsection*{Disadvantages}
+	\begin{itemize}
+		\item \textbf{Requires more planning}: Pre-stratification necessitates prior knowledge or prediction of site-specific conditions, potentially requiring preliminary site visits or additional data.
+		\item \textbf{Potential for sampling bias}: Selecting sites based on specific criteria can introduce bias if the chosen criteria do not fully capture natural variability.
+	\end{itemize}
+\end{multicols}	
+	
+	
+	\subsubsection*{Best For}
+	\begin{itemize}
+		\item Studies designed to compare specific environmental conditions (e.g., rain vs. no rain).
+		\item Hypothesis-driven research where controlled representation across environmental factors is critical.
+	\end{itemize}
+	
+	\subsection{Scientific Robustness}
+	In general, \textbf{stratified sampling as a guide} is more scientifically robust when the study aims to compare conditions (such as rain vs. no rain). This approach ensures that each condition is adequately represented, enabling meaningful statistical comparisons. On the other hand, \textbf{random sampling first} is robust for capturing a broad distribution of conditions but may lack the control needed for detailed comparisons.
+	
+	\section{Using the Sampling Script}
+	
+	\subsection{Setup and Execution}
+	To execute the sampling script, follow these steps:
+	
+	\begin{enumerate}
+		
+		\item \textbf{Prepare the CSV File}: Create a CSV file containing site attributes. Possible options include:
+		\begin{itemize}
+			\item \texttt{Name} - The name of each site
+			\item \texttt{X}, \texttt{Y} - Coordinates for each site
+			\item \texttt{location} - e.g., \texttt{urban} or \texttt{rural}
+			\item \texttt{source} - e.g., \texttt{surface}, \texttt{community}, \texttt{hospital}
+		\end{itemize}
+		
+		\item \textbf{Set Parameters and Run the Script}:
+		Modify the script’s parameters:
+		\begin{itemize}
+			\item Set \texttt{num\_groups} to the number of groups required.
+			\item Set \texttt{seed} to an integer for reproducibility.
+			\item Set \texttt{stratify\_by} to any column name in the CSV file. For example:
+			\begin{verbatim}
+				stratify_by = "physicochemical"
+			\end{verbatim}
+		\end{itemize}
+		
+		\item \textbf{Execute the Script}:
+		Save the script as \texttt{random\_sampling.py} and run it from the command line:
+		\begin{verbatim}
+			python random_sampling.py
+		\end{verbatim}
+	\end{enumerate}
+	
+	\subsection{Interpreting the Output}
+	The output displays each group and includes the site names, coordinates, and stratification values if specified. For example, if stratifying by \texttt{physicochemical} with \texttt{num\_groups=3}, each group will have a balanced representation of each pH level (or other stratified factor), allowing for controlled comparisons across the specified condition.
+	
+\subsubsection*{Example Outputs \dotfill if, for example, we have 18 sites}
+\begin{itemize}
+	\item \textbf{Stratify by physicochemical and set \texttt{num\_groups=3}}:
+	\begin{verbatim}
+		Group 1:
+		- Site A (X: ..., Y: ..., physicochemical: pH 7)
+		- Site B (X: ..., Y: ..., physicochemical: pH 6.8)
+		- Site C (X: ..., Y: ..., physicochemical: pH 7.2)
+		- Site D (X: ..., Y: ..., physicochemical: pH 7.1)
+		- Site E (X: ..., Y: ..., physicochemical: pH 6.9)
+		- Site F (X: ..., Y: ..., physicochemical: pH 7.3)
+		
+		Group 2:
+		- Site G (X: ..., Y: ..., physicochemical: pH 7)
+		- Site H (X: ..., Y: ..., physicochemical: pH 6.8)
+		- Site I (X: ..., Y: ..., physicochemical: pH 7.2)
+		- Site J (X: ..., Y: ..., physicochemical: pH 7.1)
+		- Site K (X: ..., Y: ..., physicochemical: pH 6.9)
+		- Site L (X: ..., Y: ..., physicochemical: pH 7.3)
+		
+		Group 3:
+		- Site M (X: ..., Y: ..., physicochemical: pH 7)
+		- Site N (X: ..., Y: ..., physicochemical: pH 6.8)
+		- Site O (X: ..., Y: ..., physicochemical: pH 7.2)
+		- Site P (X: ..., Y: ..., physicochemical: pH 7.1)
+		- Site Q (X: ..., Y: ..., physicochemical: pH 6.9)
+		- Site R (X: ..., Y: ..., physicochemical: pH 7.3)
+	\end{verbatim}
+	
+	\item \textbf{Stratify by location and set \texttt{num\_groups=3} with 18 sites}:
+	\begin{verbatim}
+		Group 1:
+		- Site A (X: ..., Y: ..., location: urban)
+		- Site B (X: ..., Y: ..., location: rural)
+		- Site C (X: ..., Y: ..., location: coastal)
+		- Site D (X: ..., Y: ..., location: urban)
+		- Site E (X: ..., Y: ..., location: rural)
+		- Site F (X: ..., Y: ..., location: coastal)
+		
+		Group 2:
+		- Site G (X: ..., Y: ..., location: urban)
+		- Site H (X: ..., Y: ..., location: rural)
+		- Site I (X: ..., Y: ..., location: coastal)
+		- Site J (X: ..., Y: ..., location: urban)
+		- Site K (X: ..., Y: ..., location: rural)
+		- Site L (X: ..., Y: ..., location: coastal)
+		
+		Group 3:
+		- Site M (X: ..., Y: ..., location: urban)
+		- Site N (X: ..., Y: ..., location: rural)
+		- Site O (X: ..., Y: ..., location: coastal)
+		- Site P (X: ..., Y: ..., location: urban)
+		- Site Q (X: ..., Y: ..., location: rural)
+		- Site R (X: ..., Y: ..., location: coastal)
+	\end{verbatim}
+\end{itemize}
+
+	
+\end{document}
