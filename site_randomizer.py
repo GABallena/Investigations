@@ -6,7 +6,7 @@ import random
 # df = pd.read_csv('your_data.csv')
 
 # List of site names to exclude from random sampling
-exclusions = ["Manila Bay - Baseline", "Manila Bay Site 2"]  # Add any sites you want to exclude
+exclusions = ["SIte 1, Site 2, Site 3"]  # Add any sites you want to exclude
 
 # Filter out excluded sites
 df_filtered = df[~df["Name"].isin(exclusions)]
