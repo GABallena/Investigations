@@ -1,0 +1,105 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\geometry{margin=1in}
+\title{ARG Detection and Synteny Analysis Workflow Documentation}
+\author{Gerald Amiel Ballena}
+\date{\today}
+
+\lstset{
+	basicstyle=\ttfamily\small,
+	breaklines=true,            % Enable line breaking
+	breakatwhitespace=false,    % Allow breaking anywhere
+	frame=single,               % Add a single-line frame
+	backgroundcolor=\color{gray!10},
+	showstringspaces=false,
+	keywordstyle=\color{blue},
+	commentstyle=\color{green!60!black},
+	stringstyle=\color{orange}
+}
+
+\begin{document}
+	
+	\maketitle
+	
+	\section*{Overview}
+	This document details the workflow implemented for analyzing plasmid data downloaded from the IMG/PR database. The workflow focuses on identifying plasmids with antimicrobial resistance genes (ARGs) and performing synteny analysis on ARG-positive plasmids. These analyses are critical in plasmid research as ARGs play a pivotal role in the spread of antibiotic resistance, which poses a significant public health threat. By combining ARG detection with synteny analysis, this workflow allows researchers to investigate the genetic context and evolutionary relationships of ARG-containing plasmids, providing insights into their potential mobility and functionality.
+	
+	\section*{Data Files}
+	The following files were provided in the \textbf{IMGPR} folder:
+	\begin{itemize}
+		\item \textbf{IMGPR\_plasmid\_data.tsv}: Metadata related to plasmids.
+		\item \textbf{IMGPR\_nucl.fna.gz}: Compressed nucleotide sequences.
+		\item \textbf{IMGPR\_prot.faa.gz}: Compressed protein sequences.
+		\item \textbf{README.md}: Documentation accompanying the dataset.
+	\end{itemize}
+	
+	\section*{Steps Performed}
+	
+	\subsection*{Data Cleaning}
+	The nucleotide and protein sequences were decompressed and cleaned using the following commands:
+	\begin{lstlisting}[language=bash]
+		gunzip IMGPR_nucl.fna.gz
+		gunzip IMGPR_prot.faa.gz
+		
+		sed '/^>/! s/[^ACGTNacgtn]//g' IMGPR_nucl.fna > IMGPR_nucl_cleaned.fna
+		# The following step ensures compatibility with MEME Suite by shortening headers
+		# to a maximum of 50 characters, as MEME has a strict limit on header length.
+		python clean_headers.py IMGPR_nucl_cleaned.fna
+		gzip cleaned_headers.fasta
+		# MEME Suite only accepts up to 80 Mb
+	\end{lstlisting}
+	
+	\subsection*{ARG Detection}
+	ARG detection was performed directly using \textbf{RGI} with the CARD database:
+	\begin{lstlisting}[language=bash]
+		wget https://card.mcmaster.ca/download/0/broadstreet-v3.3.0.tar.bz2 -O card.tar.bz2
+		tar -xvjf card.tar.bz2
+		rgi load -i card.json --card_annotation nucleotide_fasta_protein_homolog_model.fasta --local
+		rgi load -i card.json --wildcard\_annotation protein\_fasta\_protein\_variant\_model.fasta --local
+		rgi database --local -v
+		rgi main --input_sequence cleaned_headers.fasta \
+		--output_file results/ARGs_rgi_output \
+		--input_type contig \
+		--local \
+		--clean
+	\end{lstlisting}
+	
+	\subsection*{ARG-Positive Plasmid Extraction}
+	Plasmids with detected ARGs were identified and their sequences extracted:
+	\begin{lstlisting}[language=bash]
+		grep ">" results/ARGs_rgi_output.txt | cut -d' ' -f1 > results/arg_positive_ids.txt
+		seqtk subseq cleaned_headers.fasta results/arg_positive_ids.txt > results/arg_positive_plasmids.fna
+	\end{lstlisting}
+	
+	\subsection*{Synteny Analysis}
+	Synteny analysis was performed on ARG-positive plasmids using \textbf{MUMmer}:
+	\begin{lstlisting}[language=bash]
+		nucmer --prefix results/synteny/arg_positive_synteny \
+		results/arg_positive_plasmids.fna \
+		results/arg_positive_plasmids.fna
+		show-coords -rcl results/synteny/arg_positive_synteny.delta > results/synteny/arg_positive_synteny.coords
+	\end{lstlisting}
+	
+	\section*{Outputs}
+	The following results were generated:
+	\begin{itemize}
+		\item \textbf{plasmids\_metadata.sqlite}: SQLite database containing plasmid metadata.
+		\item \textbf{results/ARGs\_rgi\_output.txt}: ARG detection results from RGI.
+		\item \textbf{results/arg\_positive\_plasmids.fna}: FASTA file of ARG-positive plasmids.
+		\item \textbf{results/synteny/}: Synteny alignment and coordinates for ARG-positive plasmids.
+	\end{itemize}
+	
+	\section*{Future Directions}
+	\begin{itemize}
+		\item Expanded synteny analysis using progressiveMauve.
+		\item Comparative functional analysis of ARG-positive vs ARG-negative plasmids.
+		\item Visualization of synteny and ARG locations using Circos or Artemis.
+	\end{itemize}
+	
+	\section*{Acknowledgments}
+	Data sourced from the IMG/PR database.
+	
+\end{document}
