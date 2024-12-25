@@ -38,33 +38,29 @@
 	
 	\section*{Steps Performed}
 	
-	\subsection*{Data Cleaning}
+	\subsection*{Decompress}
 	The nucleotide and protein sequences were decompressed and cleaned using the following commands:
 	\begin{lstlisting}[language=bash]
 		gunzip IMGPR_nucl.fna.gz
-		gunzip IMGPR_prot.faa.gz
-		
-		sed '/^>/! s/[^ACGTNacgtn]//g' IMGPR_nucl.fna > IMGPR_nucl_cleaned.fna
-		# The following step ensures compatibility with MEME Suite by shortening headers
-		# to a maximum of 50 characters, as MEME has a strict limit on header length.
-		python clean_headers.py IMGPR_nucl_cleaned.fna
-		gzip cleaned_headers.fasta
-		# MEME Suite only accepts up to 80 Mb
 	\end{lstlisting}
 	
 	\subsection*{ARG Detection}
 	ARG detection was performed directly using \textbf{RGI} with the CARD database:
 	\begin{lstlisting}[language=bash]
-		wget https://card.mcmaster.ca/download/0/broadstreet-v3.3.0.tar.bz2 -O card.tar.bz2
-		tar -xvjf card.tar.bz2
-		rgi load -i card.json --card_annotation nucleotide_fasta_protein_homolog_model.fasta --local
-		rgi load -i card.json --wildcard\_annotation protein\_fasta\_protein\_variant\_model.fasta --local
+
+		rgi load -i card.json --card_annotation protein_fasta_protein_variant_model.fasta --local
+		
 		rgi database --local -v
-		rgi main --input_sequence cleaned_headers.fasta \
-		--output_file results/ARGs_rgi_output \
-		--input_type contig \
-		--local \
-		--clean
+		
+		mkdir results 
+		
+		chmod u+rwx ~/Desktop/*/results
+		chmod u+r IMGPR_nucl.fna
+		
+		 rgi main -i IMGPR_nucl.fna -o results/ARGs_rgi_output -t contig --local --clean -n 4
+		
+
+
 	\end{lstlisting}
 	
 	\subsection*{ARG-Positive Plasmid Extraction}
