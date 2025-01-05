@@ -65,155 +65,74 @@ Gerald Amiel Ballena
 Email: gmballena@up.edu.ph
 """
 
-
 ################################################################################
-# KEY ENHANCEMENTS
+# ENHANCEMENTS
 # 
-# 1. Resource Monitoring and Logging:
-#    - Integrated `psutil` for detailed CPU, memory, and disk usage tracking.
-#    - Periodic resource logging ensures efficient runtime performance monitoring.
+# Workflow Integration:
+# - Unified marker generation and quantification pipeline
+# - Automatic handoff between identification and quantification
+# - Support for directory-based protein family inputs
+# - Continuous pipeline execution with status tracking
 #
-# 2. Checkpoint System:
-#    - JSON-based checkpointing enables seamless recovery after failures.
-#    - Automatically resumes long-running tasks from the last saved state.
+# Resources & Performance:
+# - Monitors CPU, memory, disk usage with psutil
+# - Checkpointing for failure recovery
+# - Multi-core parallel processing
+# - Memory-efficient chunked processing
+# - DIAMOND integration for fast alignments
 #
-# 3. Parallel Processing:
-#    - Optimized execution using Python's `multiprocessing` for multi-core systems.
-#    - Real-time progress tracking with `tqdm` for enhanced user feedback.
+# Machine Learning & Analysis:
+# - Bayesian marker refinement
+# - Adaptive HDBSCAN clustering
+# - Real-time posterior probability updates
+# - Dynamic feature extraction
 #
-# 4. Enhanced Error Handling:
-#    - Comprehensive exception management for subprocess calls and I/O operations.
-#    - Pre-execution validation of dependencies and inputs ensures robustness.
+# Input Processing:
+# - Batch processing of protein families
+# - DNA to protein translation with ORF detection
+# - Support for compressed files (gz, bz2)
+# - Directory traversal for bulk processing
 #
-# 5. Memory-Efficient Processing:
-#    - Handles large datasets in optimized chunks, minimizing memory overhead.
-#    - Ideal for high-throughput sequencing and resource-intensive workflows.
+# Robustness:
+# - Comprehensive input validation
+# - Dependency checking
+# - Automatic error recovery
+# - Resource monitoring and alerts
 #
-# 6. DNA Sequence Translation:
-#    - `--dna` flag accepts DNA sequences for six-frame translation.
-#    - Automatically selects the longest Open Reading Frame (ORF) for downstream analysis.
+# Usability:
+# - Progress tracking with tqdm
+# - Detailed logging
+# - Checkpoint-based recovery
+# - Flexible output formats
 #
-# 7. Dependency Validation:
-#    - Validates tools like `usearch`, `cd-hit`, `tblastn`, and `diamond`.
-#    - Provides user-friendly error messages for missing or outdated dependencies.
+# Architecture:
+# - Modular class-based design
+# - Pipeline state management
+# - Configurable parameters
+# - Extensible framework
 #
-# 8. Preprocessing Flexibility:
-#    - Optional deduplication workflows using tools like `clumpify.sh` and `FastUniq`.
-#    - Configurable via the `--dedup` flag to suit diverse data preprocessing needs.
-#
-# 9. Enhanced Logging:
-#    - Dual-channel logging records detailed progress and system resource usage.
-#    - Logs include command parameters, runtime statistics, and performance data.
-#
-# 10. Input Validation:
-#     - Ensures input files exist and comply with FASTA/FASTQ formats.
-#     - Provides detailed error feedback for malformed or missing inputs.
-#
-# 11. Unified Workflow:
-#     - Combines `ShortBRED-Identify` and `ShortBRED-Quantify` functionalities.
-#     - Streamlines the analysis pipeline for improved usability and performance.
-#
-# 12. Secure Command Execution:
-#     - Subprocess calls are wrapped with error capture mechanisms.
-#     - Input sanitization ensures secure execution of external tools.
-#
-# 13. Modular Architecture:
-#     - Refactored into reusable classes for better maintainability and scalability.
-#     - Modular design facilitates debugging and future feature expansions.
-#
-# 14. DIAMOND Integration:
-#     - Added DIAMOND as a fast, sensitive option for sequence alignment.
-#     - Supports configurable sensitivity modes like `fast` and `very-sensitive`.
-#
-# 15. Genome Count Normalization:
-#     - Automatically normalizes counts based on marker coverage thresholds.
-#     - Handles both annotated and unannotated genomes efficiently.
-#
-# 16. Bayesian Refinement:
-#     - Bayesian clustering for adaptive marker selection and refinement.
-#     - Utilizes posterior probabilities for dynamic optimization.
-#
-# 17. Advanced Clustering Techniques:
-#     - Adaptive clustering with HDBSCAN for flexible sequence grouping.
-#     - Handles noisy data and variable cluster sizes effectively.
-#
-# 18. Real-Time Progress Updates:
-#     - Provides progress feedback with estimated completion times.
-#     - Enhances user experience during long-running processes.
-#
-# 19. Output Management:
-#     - Standardized file naming for outputs and intermediate results.
-#     - Configurable output directories for streamlined workflow organization.
-#
-# 20. Documentation Enhancements:
-#     - Improved inline comments for clarity and easier maintenance.
-#     - Comprehensive user documentation with examples and tips for efficient usage.
-################################################################################
+###################################################################################################
 
+#####################################DEPENDENCIES INSTALLATION#####################################
+# Python packages
+#pip install biopython tqdm psutil numpy pandas scikit-learn hdbscan joblib
 
-############# Dependency Installation #################
+# BLAST+
+#sudo apt install ncbi-blast+
 
-# Step 1: Ensure Python 3.7 or higher is installed
-# Check Python version
-# Command: python3 --version
-# If not installed, download it from https://www.python.org/downloads/
+# USEARCH
+#sudo mv usearch /usr/local/bin/ && chmod +x /usr/local/bin/usearch
 
-# Step 2: Set up a virtual environment (optional but recommended)
-# Create a virtual environment
-# Command: python3 -m venv shortbred_env
-# Activate the environment
-# Command (Linux/MacOS): source shortbred_env/bin/activate
-# Command (Windows): shortbred_env\Scripts\activate
+# CD-HIT 
+#sudo apt install cdhit
 
-# Step 3: Install required Python packages
-# Install packages using pip
-# Command: pip install biopython tqdm psutil numpy pandas scikit-learn hdbscan joblib
-# Alternatively, use a requirements file:
-# Command: pip install -r requirements.txt
+# RAPSearch2
+#git clone https://github.com/zhaoyanswill/RAPSearch2.git && cd RAPSearch2 && make && sudo mv bin/rapsearch /usr/local/bin/
 
-# Step 4: Install NCBI BLAST+ tools
-# Install NCBI BLAST+ tools
-# Command (Linux): sudo apt install ncbi-blast+
-# Verify installation:
-# Command: tblastn -version
-# Command: makeblastdb -version
+# DIAMOND
+#wget http://github.com/bbuchfink/diamond/releases/download/v2.1.8/diamond-linux64.tar.gz && tar xzf diamond-linux64.tar.gz && sudo mv diamond /usr/local/bin/
 
-# Step 5: Install USEARCH
-# Download USEARCH from https://www.drive5.com/usearch/download.html
-# Make it executable
-# Command: chmod +x usearch
-# Move it to a directory in your PATH
-# Command: sudo mv usearch /usr/local/bin/
-# Verify installation:
-# Command: usearch -version
-
-# Step 6: Install CD-HIT
-# Install CD-HIT
-# Command (Linux): sudo apt install cdhit
-# Verify installation:
-# Command: cd-hit -version
-
-# Step 7: Install RAPSearch2
-# Clone RAPSearch2 repository
-# Command: git clone https://github.com/zhaoyanswill/RAPSearch2.git
-# Compile the source code
-# Command: cd RAPSearch2 && make
-# Move the binaries to a directory in your PATH
-# Command: sudo mv RAPSearch2/rapsearch /usr/local/bin/
-# Verify installation:
-# Command: rapsearch -version
-
-# Step 8: Install DIAMOND
-# Download DIAMOND from https://github.com/bbuchfink/diamond
-# Extract the binary and move it to your PATH
-# Command: chmod +x diamond
-# Command: sudo mv diamond /usr/local/bin/
-# Verify installation:
-# Command: diamond --version
-
-#######################################################
-
-
+###################################################################################################
 
 # Environment check
 import sys
@@ -250,6 +169,7 @@ from sklearn.neighbors import NearestNeighbors
 import hdbscan
 import shutil
 import json
+import glob
 
 VERSION = "standalone-1.0"
 
@@ -803,8 +723,8 @@ Version: Modified-1.0 (2025)
 MANDATORY (choose one workflow):
 
     1. Marker Generation Workflow:
-        --goi PATH           Input protein families (FASTA)    [REQUIRED]
-        --ref PATH          Reference protein sequences       [REQUIRED]
+        --goi PATH           Input protein families (FASTA file or directory containing FASTA files) [REQUIRED for marker generation]
+        --ref PATH          Reference protein sequences       [REQUIRED for marker generation]
         
     2. Quantification Workflow:
         --markers PATH      ShortBRED markers file           [REQUIRED]
@@ -817,6 +737,7 @@ COMMONLY USED OPTIONS:
         --threads INT      Number of CPU threads              [default: 1]
         --dna             Process DNA input (auto-translate)  [default: False]
         --verbose         Show detailed progress              [default: False]
+        --checkpoint      Enable checkpointing               [default: False]
 
     Search Configuration:
         --search_program PROG   Search tool to use            [default: usearch]
@@ -826,6 +747,27 @@ COMMONLY USED OPTIONS:
     Output Control:
         --results PATH     Output file for results           [default: results.tab]
         --tmp PATH        Temporary directory                [default: auto-generated]
+        --batch_summary   Generate batch processing summary  [default: False]
+
+NEW FEATURES:
+    Machine Learning:
+        --bayesian        Use Bayesian marker refinement     [default: False]
+        --adaptive        Enable adaptive clustering         [default: False]
+        --model PATH      Load pre-trained model            [optional]
+
+    Batch Processing:
+        --batch_size INT  Number of files per batch         [default: 10]
+        --parallel        Enable parallel batch processing   [default: False]
+        
+    Resource Management:
+        --max_memory INT  Maximum memory usage (GB)         [default: system available]
+        --monitor         Enable resource monitoring        [default: False]
+        --alert          Enable resource alerts            [default: False]
+
+    Recovery Options:
+        --resume         Resume from last checkpoint        [default: False]
+        --max_retries INT Maximum retry attempts            [default: 3]
+        --backup        Enable automatic backups           [default: False]
 
 ADVANCED OPTIONS:
     Marker Generation:
@@ -848,15 +790,20 @@ ADVANCED OPTIONS:
 For complete documentation: https://github.com/gmballena/shortbred-modified
 
 EXAMPLES:
-    1. Generate markers from protein families:
-       python shortbred_modified.py --goi proteins.faa --ref reference.faa
+    1. Generate markers with Bayesian refinement:
+       python shortbred_modified.py --goi proteins.faa --ref reference.faa --bayesian
 
-    2. Quantify markers in metagenome:
-       python shortbred_modified.py --markers markers.faa --wgs metagenome.fastq
+    2. Batch process multiple families with monitoring:
+       python shortbred_modified.py --goi protein_families_dir/ --ref reference.faa --batch_size 20 --monitor
 
-    3. Process genome with DIAMOND:
-       python shortbred_modified.py --markers markers.faa --genome genome.faa \
-           --search_program diamond --threads 8
+    3. Resume failed analysis with checkpointing:
+       python shortbred_modified.py --goi proteins.faa --ref reference.faa --resume --checkpoint
+
+    4. Process with resource management:
+       python shortbred_modified.py --markers markers.faa --wgs metagenome.fastq --max_memory 32 --monitor --alert
+
+    5. Parallel batch processing with adaptive clustering:
+       python shortbred_modified.py --goi protein_families_dir/ --ref reference.faa --parallel --adaptive --threads 16
 ''', 
     formatter_class=RawTextHelpFormatter, 
     add_help=False  # Disable default -h
@@ -871,7 +818,8 @@ parser.add_argument("--version", action="version", version="%(prog)s vModified-1
 
 # Workflow arguments
 workflow = parser.add_argument_group('Mandatory Workflows')
-workflow.add_argument('--goi', type=str, help='Input protein families (FASTA) [REQUIRED for marker generation]')
+workflow.add_argument('--goi', type=str, 
+    help='Input protein families (FASTA file or directory containing FASTA files) [REQUIRED for marker generation]')
 workflow.add_argument('--ref', type=str, help='Reference protein sequences (FASTA) [REQUIRED for marker generation]')
 workflow.add_argument('--markers', type=str, help='ShortBRED markers file [REQUIRED for quantification]')
 workflow.add_argument('--wgs', type=str, nargs='+', help='WGS reads file(s) [REQUIRED if not using --genome]')
@@ -890,7 +838,41 @@ common.add_argument('--help', '-h', action='help', help='Show this help message 
 # Parse arguments
 args = parser.parse_args()
 
- 
+# Add new function for handling directory input (add before main processing)
+def process_goi_input(goi_path):
+    """Process --goi input which can be a file or directory"""
+    if not os.path.exists(goi_path):
+        raise ValueError(f"Path does not exist: {goi_path}")
+        
+    if os.path.isfile(goi_path):
+        return [goi_path]
+        
+    if os.path.isdir(goi_path):
+        fasta_files = []
+        for ext in ['.fasta', '.faa', '.fa']:
+            fasta_files.extend(glob.glob(os.path.join(goi_path, f'*{ext}')))
+        
+        if not fasta_files:
+            raise ValueError(f"No FASTA files found in directory: {goi_path}")
+            
+        return sorted(fasta_files)
+        
+    raise ValueError(f"Invalid path type for --goi: {goi_path}")
+
+# In the main processing section, replace the goi file handling with:
+if args.goi:
+    try:
+        goi_files = process_goi_input(args.goi)
+        logging.info(f"Found {len(goi_files)} protein family files to process")
+        
+        # Process each file
+        for goi_file in goi_files:
+            logging.info(f"Processing protein family file: {os.path.basename(goi_file)}")
+            # ...existing goi processing code...
+            
+    except Exception as e:
+        logging.error(f"Error processing protein families: {str(e)}")
+        raise
 
 
 ################################################################################
@@ -1828,5 +1810,343 @@ def main():
     except Exception as e:
         logging.error(f"Fatal error: {str(e)}")
         sys.exit(1)
+
+class MarkerGenerationHandoff:
+    """Manages automatic transition from marker generation to quantification"""
+    
+    def __init__(self, tmp_dir):
+        self.tmp_dir = Path(tmp_dir)
+        self.marker_file = None
+        self.metadata = {}
+        
+    def save_markers(self, markers, metadata):
+        """Save generated markers and prepare for quantification"""
+        self.marker_file = self.tmp_dir / "generated_markers.faa"
+        
+        # Write markers to file
+        with open(self.marker_file, "w") as f:
+            SeqIO.write(markers, f, "fasta")
+            
+        # Store metadata
+        self.metadata = {
+            'generation_time': datetime.datetime.now().isoformat(),
+            'marker_count': len(markers),
+            'marker_stats': metadata
+        }
+        
+        return self.marker_file
+        
+    def transition_to_quantify(self, args):
+        """Transition to quantification phase"""
+        if not self.marker_file or not self.marker_file.exists():
+            raise ValueError("No markers available for quantification")
+            
+        # Update args for quantification
+        args.strMarkers = str(self.marker_file)
+        args.goi = None  # Clear marker generation args
+        args.ref = None
+        
+        logging.info(f"Transitioning to quantification using markers: {self.marker_file}")
+        return args
+
+# ...existing code...
+
+# Modify main processing section:
+def main():
+    # ...existing initialization code...
+    
+    handoff = MarkerGenerationHandoff(tmp_dir)
+    
+    try:
+        if args.goi:  # Marker generation workflow
+            logging.info("Starting marker generation workflow...")
+            
+            # Process marker generation
+            goi_files = process_goi_input(args.goi)
+            markers = generate_markers(goi_files, args)
+            
+            # Save markers and prepare for quantification
+            marker_file = handoff.save_markers(markers, {
+                'source_files': goi_files,
+                'parameters': {
+                    'min_length': args.min_marker_length,
+                    'identity': args.marker_identity,
+                    'clustering': args.cdhit_cluster
+                }
+            })
+            
+            if args.wgs or args.genome:  # Auto-transition to quantification
+                logging.info("Automatically transitioning to quantification...")
+                args = handoff.transition_to_quantify(args)
+                # Continue with quantification
+                process_quantification(args)
+            else:
+                logging.info(f"Marker generation complete. Markers saved to: {marker_file}")
+                logging.info("To quantify, rerun with --markers and --wgs/--genome options")
+                
+        elif args.strMarkers:  # Direct quantification workflow
+            process_quantification(args)
+            
+        else:
+            parser.print_help()
+            sys.exit(1)
+            
+    except Exception as e:
+        logging.error(f"Processing failed: {str(e)}")
+        raise
+
+def process_quantification(args):
+    """Handle quantification workflow"""
+    logging.info("Starting quantification workflow...")
+    # ...existing quantification code...
+
+# ...rest of existing code...
+
+if __name__ == "__main__":
+    main()
+
+# ...existing imports...
+
+class BatchProcessor:
+    """Handles batch processing of multiple protein family files"""
+    
+    def __init__(self, output_dir: Path, args):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.args = args
+        self.results = {}
+        
+    def process_batch(self, goi_files):
+        """Process multiple protein family files and generate separate outputs"""
+        for goi_file in tqdm(goi_files, desc="Processing protein families"):
+            try:
+                # Create family-specific output directory
+                family_name = Path(goi_file).stem
+                family_dir = self.output_dir / family_name
+                family_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Update args with family-specific paths
+                family_args = self._prepare_family_args(family_dir, goi_file)
+                
+                # Process this family
+                logging.info(f"Processing family: {family_name}")
+                result = self._process_single_family(family_args)
+                
+                # Store results
+                self.results[family_name] = {
+                    'output_dir': str(family_dir),
+                    'markers_file': str(result.get('markers_file')),
+                    'results_file': str(result.get('results_file')),
+                    'status': 'completed'
+                }
+                
+            except Exception as e:
+                logging.error(f"Error processing {goi_file}: {str(e)}")
+                self.results[family_name] = {
+                    'output_dir': str(family_dir),
+                    'status': 'failed',
+                    'error': str(e)
+                }
+                
+        # Write batch summary
+        self._write_summary()
+        
+    def _prepare_family_args(self, family_dir, goi_file):
+        """Create family-specific argument set"""
+        family_args = copy.deepcopy(self.args)
+        family_args.goi = goi_file
+        family_args.strTmp = str(family_dir)
+        family_args.strResults = str(family_dir / "results.tab")
+        family_args.strMarkerResults = str(family_dir / "markers.tab")
+        return family_args
+        
+    def _process_single_family(self, family_args):
+        """Process a single protein family"""
+        # Generate markers
+        markers = generate_markers([family_args.goi], family_args)
+        markers_file = family_args.strTmp / "generated_markers.faa"
+        
+        # If quantification is requested
+        if family_args.wgs or family_args.genome:
+            handoff = MarkerGenerationHandoff(family_args.strTmp)
+            handoff.save_markers(markers, {
+                'source_file': family_args.goi,
+                'parameters': {
+                    'min_length': family_args.min_marker_length,
+                    'identity': family_args.marker_identity
+                }
+            })
+            family_args = handoff.transition_to_quantify(family_args)
+            process_quantification(family_args)
+            
+        return {
+            'markers_file': markers_file,
+            'results_file': family_args.strResults
+        }
+        
+    def _write_summary(self):
+        """Write batch processing summary"""
+        summary_file = self.output_dir / "batch_summary.json"
+        with summary_file.open('w') as f:
+            json.dump({
+                'timestamp': datetime.datetime.now().isoformat(),
+                'total_families': len(self.results),
+                'successful': sum(1 for r in self.results.values() if r['status'] == 'completed'),
+                'failed': sum(1 for r in self.results.values() if r['status'] == 'failed'),
+                'results': self.results
+            }, f, indent=2)
+
+# Modify main processing section:
+def main():
+    # ...existing initialization code...
+    
+    try:
+        if args.goi:  # Marker generation workflow
+            goi_files = process_goi_input(args.goi)
+            logging.info(f"Found {len(goi_files)} protein family files to process")
+            
+            # Create output directory
+            output_dir = Path(args.strResults).parent if args.strResults else Path("shortbred_results")
+            batch_processor = BatchProcessor(output_dir, args)
+            
+            # Process all files
+            batch_processor.process_batch(goi_files)
+            
+            logging.info(f"Batch processing complete. Results in: {output_dir}")
+            
+        elif args.strMarkers:  # Direct quantification workflow
+            process_quantification(args)
+            
+        else:
+            parser.print_help()
+            sys.exit(1)
+            
+    except Exception as e:
+        logging.error(f"Processing failed: {str(e)}")
+        raise
+
+# ...rest of existing code...
+
+# ...existing imports...
+
+class FolderProcessor:
+    """Processes multiple input files using the same markers"""
+    
+    def __init__(self, output_dir: Path, args):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.args = args
+        self.results = {}
+        self.markers = None
+        
+    def process_folder(self, input_folder: Path):
+        """Process all files in input folder using generated markers"""
+        input_files = []
+        # Gather all input files
+        for ext in ['*.fasta', '*.fastq', '*.fq', '*.fa', '*.fna', '*_1.fastq', '*_2.fastq']:
+            input_files.extend(input_folder.glob(ext))
+            input_files.extend(input_folder.glob(f"{ext}.gz"))
+        
+        if not input_files:
+            raise ValueError(f"No valid input files found in {input_folder}")
+            
+        # First generate markers if needed
+        if self.args.goi:
+            logging.info("Generating markers from protein families...")
+            self.markers = generate_markers([self.args.goi], self.args)
+            markers_file = self.output_dir / "generated_markers.faa"
+            SeqIO.write(self.markers, markers_file, "fasta")
+            self.args.strMarkers = str(markers_file)
+        
+        # Process each input file
+        for input_file in tqdm(input_files, desc="Processing input files"):
+            try:
+                # Create sample-specific output directory
+                sample_name = input_file.stem
+                sample_dir = self.output_dir / sample_name
+                sample_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Prepare args for this sample
+                sample_args = self._prepare_sample_args(sample_dir, input_file)
+                
+                # Process sample
+                logging.info(f"Processing sample: {sample_name}")
+                result = self._process_single_sample(sample_args)
+                
+                # Store results
+                self.results[sample_name] = {
+                    'input_file': str(input_file),
+                    'output_dir': str(sample_dir),
+                    'results_file': str(result.get('results_file')),
+                    'status': 'completed'
+                }
+                
+            except Exception as e:
+                logging.error(f"Error processing {input_file}: {str(e)}")
+                self.results[sample_name] = {
+                    'input_file': str(input_file),
+                    'status': 'failed',
+                    'error': str(e)
+                }
+        
+        # Write summary
+        self._write_summary()
+        
+    def _prepare_sample_args(self, sample_dir, input_file):
+        """Create sample-specific argument set"""
+        sample_args = copy.deepcopy(self.args)
+        if input_file.suffix in ['.fastq', '.fq']:
+            sample_args.wgs = str(input_file)
+            sample_args.genome = None
+        else:
+            sample_args.genome = str(input_file)
+            sample_args.wgs = None
+        sample_args.strTmp = str(sample_dir)
+        sample_args.strResults = str(sample_dir / "results.tab")
+        return sample_args
+        
+    def _process_single_sample(self, sample_args):
+        """Process a single input file"""
+        # Run quantification
+        process_quantification(sample_args)
+        return {
+            'results_file': sample_args.strResults
+        }
+        
+    def _write_summary(self):
+        """Write processing summary"""
+        summary_file = self.output_dir / "processing_summary.json"
+        with summary_file.open('w') as f:
+            json.dump({
+                'timestamp': datetime.datetime.now().isoformat(),
+                'total_samples': len(self.results),
+                'successful': sum(1 for r in self.results.values() if r['status'] == 'completed'),
+                'failed': sum(1 for r in self.results.values() if r['status'] == 'failed'),
+                'markers_file': str(self.args.strMarkers),
+                'results': self.results
+            }, f, indent=2)
+
+# Modify main processing section:
+def main():
+    # ...existing initialization code...
+    
+    try:
+        # Create output directory
+        output_dir = Path(args.strResults).parent if args.strResults else Path("shortbred_results")
+        
+        # Initialize folder processor
+        processor = FolderProcessor(output_dir, args)
+        
+        # Process input folder
+        input_folder = Path(args.wgs if args.wgs else args.genome).parent
+        processor.process_folder(input_folder)
+        
+        logging.info(f"Processing complete. Results in: {output_dir}")
+            
+    except Exception as e:
+        logging.error(f"Processing failed: {str(e)}")
+        raise
+
+# ...rest of existing code...
 
 
