@@ -68,48 +68,47 @@ Email: gmballena@up.edu.ph
 ################################################################################
 # ENHANCEMENTS
 # 
-# Workflow Integration:
-# - Unified marker generation and quantification pipeline
-# - Automatic handoff between identification and quantification
-# - Support for directory-based protein family inputs
-# - Continuous pipeline execution with status tracking
+# Unified Pipeline:
+# - Combined identification and quantification in a single workflow
+# - Automatic batch processing of protein families and input files
+# - Support for both WGS reads and genome sequences
+# - Seamless marker generation to quantification handoff
 #
-# Resources & Performance:
-# - Monitors CPU, memory, disk usage with psutil
-# - Checkpointing for failure recovery
-# - Multi-core parallel processing
-# - Memory-efficient chunked processing
-# - DIAMOND integration for fast alignments
+# Batch Processing:
+# - Process entire directories of protein families
+# - Process multiple WGS/genome files
+# - Individual output directories per sample
+# - Comprehensive batch summary reports
 #
-# Machine Learning & Analysis:
-# - Bayesian marker refinement
-# - Adaptive HDBSCAN clustering
-# - Real-time posterior probability updates
-# - Dynamic feature extraction
-#
-# Input Processing:
-# - Batch processing of protein families
+# Input Flexibility:
+# - Support for FASTA, FASTQ file formats
+# - Handle compressed files (gz, bz2, tar)
 # - DNA to protein translation with ORF detection
-# - Support for compressed files (gz, bz2)
-# - Directory traversal for bulk processing
+# - Directory traversal for bulk inputs
 #
-# Robustness:
-# - Comprehensive input validation
-# - Dependency checking
-# - Automatic error recovery
-# - Resource monitoring and alerts
+# Search Tools:
+# - USEARCH integration
+# - DIAMOND support for fast searching
+# - RAPSearch2 compatibility
+# - BLAST+ toolkit support
 #
-# Usability:
+# Performance:
+# - Multi-threaded execution
+# - Memory-efficient processing
 # - Progress tracking with tqdm
-# - Detailed logging
-# - Checkpoint-based recovery
-# - Flexible output formats
+# - Resource usage monitoring
 #
-# Architecture:
-# - Modular class-based design
-# - Pipeline state management
-# - Configurable parameters
-# - Extensible framework
+# Error Handling:
+# - Comprehensive input validation
+# - Robust dependency checking
+# - Detailed error reporting
+# - Recovery from failures
+#
+# Output Management:
+# - Structured output directories
+# - Individual sample results
+# - Batch processing summaries
+# - Detailed logging
 #
 ###################################################################################################
 
@@ -131,6 +130,23 @@ Email: gmballena@up.edu.ph
 
 # DIAMOND
 #wget http://github.com/bbuchfink/diamond/releases/download/v2.1.8/diamond-linux64.tar.gz && tar xzf diamond-linux64.tar.gz && sudo mv diamond /usr/local/bin/
+
+# BBMap (for clumpify.sh)
+# Method 1: Using package manager (Ubuntu/Debian)
+#sudo apt-get install bbmap
+
+# Method 2: Manual installation
+#wget https://sourceforge.net/projects/bbmap/files/latest/download -O bbmap.tar.gz
+#tar -xvzf bbmap.tar.gz
+#sudo mv bbmap /usr/local/
+#sudo ln -s /usr/local/bbmap/clumpify.sh /usr/local/bin/
+#sudo chmod +x /usr/local/bbmap/clumpify.sh
+
+# Method 3: Using Conda
+#conda install -c bioconda bbmap
+
+# Verify clumpify installation:
+#clumpify.sh -h
 
 ###################################################################################################
 
@@ -787,6 +803,11 @@ ADVANCED OPTIONS:
         --bz2                      Handle bz2 compressed files
         --pctmarker_thresh FLOAT   Marker mapping threshold [default: 0.1]
 
+    Read Processing:
+        --deduplicate            Enable read deduplication with clumpify
+        --clumpify-params STR    Custom parameters for clumpify
+                                (e.g. "subs=1,passes=3,dupedist=50")
+
 For complete documentation: https://github.com/gmballena/shortbred-modified
 
 EXAMPLES:
@@ -804,6 +825,46 @@ EXAMPLES:
 
     5. Parallel batch processing with adaptive clustering:
        python shortbred_modified.py --goi protein_families_dir/ --ref reference.faa --parallel --adaptive --threads 16
+
+    6. Process with deduplication:
+       python shortbred_modified.py --markers markers.faa --wgs reads.fastq \
+           --deduplicate --clumpify-params "subs=1,passes=3"
+
+    7. Analyze diversity between samples:
+       python shortbred_modified.py --markers markers.faa --wgs sample*.fastq \
+           --metadata sample_metadata.csv
+
+    8. Process multiple samples with diversity metrics:
+       python shortbred_modified.py --markers markers.faa --wgs metagenomes/*.fastq \
+           --metadata metadata.csv \
+           --batch_size 20 \
+           --threads 16
+
+    9. Compare marker diversity across conditions:
+       python shortbred_modified.py --markers markers.faa \
+           --wgs "samples/*_R{1,2}.fastq.gz" \
+           --metadata clinical_metadata.csv \
+           --batch_size 50 \
+           --threads 32
+
+    10. Full analysis with all metrics:
+        python shortbred_modified.py --goi protein_families/ \
+            --ref reference.faa \
+            --wgs samples/*.fastq \
+            --metadata metadata.csv \
+            --parallel \
+            --threads 16 \
+            --monitor \
+            --batch_size 20
+
+Sample metadata.csv format:
+    sample_id,condition,timepoint,group
+    sample1,treated,t0,A
+    sample2,control,t0,A
+    sample3,treated,t1,B
+    ...
+
+For complete documentation: https://github.com/gmballena/shortbred-modified
 ''', 
     formatter_class=RawTextHelpFormatter, 
     add_help=False  # Disable default -h
@@ -2028,124 +2089,117 @@ def main():
 # ...rest of existing code...
 
 # ...existing imports...
+from shortbred_visualizations import ShortBREDVisualizer
 
 class FolderProcessor:
     """Processes multiple input files using the same markers"""
     
     def __init__(self, output_dir: Path, args):
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.args = args
-        self.results = {}
-        self.markers = None
-        
-    def process_folder(self, input_folder: Path):
-        """Process all files in input folder using generated markers"""
-        input_files = []
-        # Gather all input files
-        for ext in ['*.fasta', '*.fastq', '*.fq', '*.fa', '*.fna', '*_1.fastq', '*_2.fastq']:
-            input_files.extend(input_folder.glob(ext))
-            input_files.extend(input_folder.glob(f"{ext}.gz"))
-        
-        if not input_files:
-            raise ValueError(f"No valid input files found in {input_folder}")
-            
-        # First generate markers if needed
-        if self.args.goi:
-            logging.info("Generating markers from protein families...")
-            self.markers = generate_markers([self.args.goi], self.args)
-            markers_file = self.output_dir / "generated_markers.faa"
-            SeqIO.write(self.markers, markers_file, "fasta")
-            self.args.strMarkers = str(markers_file)
-        
-        # Process each input file
-        for input_file in tqdm(input_files, desc="Processing input files"):
-            try:
-                # Create sample-specific output directory
-                sample_name = input_file.stem
-                sample_dir = self.output_dir / sample_name
-                sample_dir.mkdir(parents=True, exist_ok=True)
-                
-                # Prepare args for this sample
-                sample_args = self._prepare_sample_args(sample_dir, input_file)
-                
-                # Process sample
-                logging.info(f"Processing sample: {sample_name}")
-                result = self._process_single_sample(sample_args)
-                
-                # Store results
-                self.results[sample_name] = {
-                    'input_file': str(input_file),
-                    'output_dir': str(sample_dir),
-                    'results_file': str(result.get('results_file')),
-                    'status': 'completed'
-                }
-                
-            except Exception as e:
-                logging.error(f"Error processing {input_file}: {str(e)}")
-                self.results[sample_name] = {
-                    'input_file': str(input_file),
-                    'status': 'failed',
-                    'error': str(e)
-                }
-        
-        # Write summary
-        self._write_summary()
-        
-    def _prepare_sample_args(self, sample_dir, input_file):
-        """Create sample-specific argument set"""
-        sample_args = copy.deepcopy(self.args)
-        if input_file.suffix in ['.fastq', '.fq']:
-            sample_args.wgs = str(input_file)
-            sample_args.genome = None
-        else:
-            sample_args.genome = str(input_file)
-            sample_args.wgs = None
-        sample_args.strTmp = str(sample_dir)
-        sample_args.strResults = str(sample_dir / "results.tab")
-        return sample_args
+        # ...existing init code...
+        self.visualizer = ShortBREDVisualizer(output_dir / "visualizations")
         
     def _process_single_sample(self, sample_args):
-        """Process a single input file"""
-        # Run quantification
-        process_quantification(sample_args)
-        return {
-            'results_file': sample_args.strResults
-        }
+        result = super()._process_single_sample(sample_args)
+        
+        # Generate visualizations for the sample
+        if result['results_file']:
+            results_df = pd.read_csv(result['results_file'], sep='\t')
+            
+            # Create visualizations
+            self.visualizer.plot_abundance_heatmap(
+                results_df.pivot(index='Family', columns='Sample', values='Count')
+            )
+            
+            if hasattr(self, 'deduplicator'):
+                coverage_data = {
+                    'Original': self.deduplicator.get_stats().get('coverage_before', []),
+                    'Deduplicated': self.deduplicator.get_stats().get('coverage_after', [])
+                }
+                self.visualizer.plot_coverage_analysis(coverage_data)
+        
+        return result
         
     def _write_summary(self):
-        """Write processing summary"""
-        summary_file = self.output_dir / "processing_summary.json"
-        with summary_file.open('w') as f:
-            json.dump({
-                'timestamp': datetime.datetime.now().isoformat(),
-                'total_samples': len(self.results),
-                'successful': sum(1 for r in self.results.values() if r['status'] == 'completed'),
-                'failed': sum(1 for r in self.results.values() if r['status'] == 'failed'),
-                'markers_file': str(self.args.strMarkers),
-                'results': self.results
-            }, f, indent=2)
-
-# Modify main processing section:
-def main():
-    # ...existing initialization code...
-    
-    try:
-        # Create output directory
-        output_dir = Path(args.strResults).parent if args.strResults else Path("shortbred_results")
+        """Write processing summary with visualizations"""
+        # ...existing summary code...
         
-        # Initialize folder processor
-        processor = FolderProcessor(output_dir, args)
+        # Create summary visualizations
+        all_results = []
+        for sample_name, result in self.results.items():
+            if result['status'] == 'completed':
+                df = pd.read_csv(result['results_file'], sep='\t')
+                df['Sample'] = sample_name
+                all_results.append(df)
         
-        # Process input folder
-        input_folder = Path(args.wgs if args.wgs else args.genome).parent
-        processor.process_folder(input_folder)
-        
-        logging.info(f"Processing complete. Results in: {output_dir}")
+        if all_results:
+            combined_df = pd.concat(all_results)
             
-    except Exception as e:
-        logging.error(f"Processing failed: {str(e)}")
-        raise
+            # Generate comprehensive visualizations
+            self.visualizer.plot_sample_comparison(
+                combined_df.pivot(index='Family', columns='Sample', values='Count')
+            )
+            
+            self.visualizer.create_summary_report({
+                'stats': {
+                    'Total Samples': len(self.results),
+                    'Successful': sum(1 for r in self.results.values() if r['status'] == 'completed'),
+                    'Failed': sum(1 for r in self.results.values() if r['status'] == 'failed')
+                },
+                'abundances': combined_df
+            })
+
+# Update argument parser
+parser.add_argument('--disable-plots', action='store_true',
+                   help='Disable generation of plots and visualizations')
+
+# ...rest of existing code...
+
+# ...existing imports...
+from shortbred_diversity import DiversityAnalyzer
+
+class FolderProcessor:
+    """Processes multiple input files using the same markers"""
+    
+    def __init__(self, output_dir: Path, args):
+        # ...existing init code...
+        self.visualizer = ShortBREDVisualizer(output_dir / "visualizations")
+        self.diversity_analyzer = DiversityAnalyzer(output_dir / "diversity")
+        
+    def _write_summary(self):
+        """Write processing summary with visualizations and diversity analysis"""
+        # ...existing summary code...
+        
+        if all_results:
+            combined_df = pd.concat(all_results)
+            abundance_matrix = combined_df.pivot(
+                index='Family', 
+                columns='Sample', 
+                values='Count'
+            ).fillna(0)
+            
+            # Generate diversity analysis
+            if not args.disable_diversity:
+                try:
+                    # Load metadata if provided
+                    metadata = None
+                    if args.metadata:
+                        metadata = pd.read_csv(args.metadata, index_col=0)
+                    
+                    self.diversity_analyzer.generate_diversity_report(
+                        abundance_matrix=abundance_matrix,
+                        metadata=metadata
+                    )
+                    
+                except Exception as e:
+                    logging.error(f"Error generating diversity analysis: {str(e)}")
+            
+            # Continue with other visualizations...
+
+# Add new argument to parser
+parser.add_argument('--disable-diversity', action='store_true',
+                   help='Disable diversity analysis')
+parser.add_argument('--metadata', type=str,
+                   help='Path to sample metadata file (CSV format)')
 
 # ...rest of existing code...
 
