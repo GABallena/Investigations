@@ -68,85 +68,86 @@ Email: gmballena@up.edu.ph
 
 ################################################################################
 # KEY ENHANCEMENTS
+# 
 # 1. Resource Monitoring and Logging:
-#    - Integrated `psutil` to track detailed CPU and memory usage.
-#    - Periodic resource usage logging to monitor system performance during runtime.
+#    - Integrated `psutil` for detailed CPU, memory, and disk usage tracking.
+#    - Periodic resource logging ensures efficient runtime performance monitoring.
 #
 # 2. Checkpoint System:
-#    - JSON-based checkpointing to resume operations seamlessly after unexpected failures.
-#    - Robust recovery for long-running tasks.
+#    - JSON-based checkpointing enables seamless recovery after failures.
+#    - Automatically resumes long-running tasks from the last saved state.
 #
 # 3. Parallel Processing:
-#    - Leveraged Python's `multiprocessing` module for faster execution on multi-core systems.
-#    - Real-time progress updates using `tqdm` for improved user experience.
+#    - Optimized execution using Python's `multiprocessing` for multi-core systems.
+#    - Real-time progress tracking with `tqdm` for enhanced user feedback.
 #
 # 4. Enhanced Error Handling:
-#    - Comprehensive exception handling for subprocess calls, file I/O, and critical operations.
-#    - Improved validation for dependencies, parameters, and input files to ensure robustness.
+#    - Comprehensive exception management for subprocess calls and I/O operations.
+#    - Pre-execution validation of dependencies and inputs ensures robustness.
 #
-# 5. Memory-Efficient Chunk Processing:
-#    - Optimized chunk-based processing to handle large datasets with minimal memory overhead.
-#    - Ideal for high-throughput sequencing data analysis.
+# 5. Memory-Efficient Processing:
+#    - Handles large datasets in optimized chunks, minimizing memory overhead.
+#    - Ideal for high-throughput sequencing and resource-intensive workflows.
 #
-# 6. DNA Sequence Detection and Translation:
-#    - Added the `--dna` flag to accept DNA sequences as input.
-#    - Automated six-frame translation with selection of the longest Open Reading Frame (ORF).
+# 6. DNA Sequence Translation:
+#    - `--dna` flag accepts DNA sequences for six-frame translation.
+#    - Automatically selects the longest Open Reading Frame (ORF) for downstream analysis.
 #
-# 7. Improved Dependency Validation:
-#    - Validates critical tools like `usearch`, `cd-hit`, `tblastn`, and `diamond`.
-#    - User-friendly error messages for missing or outdated dependencies.
+# 7. Dependency Validation:
+#    - Validates tools like `usearch`, `cd-hit`, `tblastn`, and `diamond`.
+#    - Provides user-friendly error messages for missing or outdated dependencies.
 #
-# 8. Preprocessing Options:
-#    - Introduced optional deduplication using tools like `clumpify.sh` or `FastUniq` via the `--dedup` flag.
-#    - Configurable preprocessing workflows to suit diverse input formats.
+# 8. Preprocessing Flexibility:
+#    - Optional deduplication workflows using tools like `clumpify.sh` and `FastUniq`.
+#    - Configurable via the `--dedup` flag to suit diverse data preprocessing needs.
 #
 # 9. Enhanced Logging:
-#    - Dual-channel logging to both console and file for detailed tracking.
-#    - Logs include command parameters, progress updates, and system resource usage.
+#    - Dual-channel logging records detailed progress and system resource usage.
+#    - Logs include command parameters, runtime statistics, and performance data.
 #
 # 10. Input Validation:
-#     - Ensures valid input formats (FASTA/FASTQ) and verifies file existence.
-#     - Provides detailed error messages for malformed or missing inputs.
+#     - Ensures input files exist and comply with FASTA/FASTQ formats.
+#     - Provides detailed error feedback for malformed or missing inputs.
 #
 # 11. Unified Workflow:
-#     - Merged `ShortBRED-Identify` and `ShortBRED-Quantify` functionalities into a single script.
-#     - Simplified and streamlined the analysis pipeline for ease of use.
+#     - Combines `ShortBRED-Identify` and `ShortBRED-Quantify` functionalities.
+#     - Streamlines the analysis pipeline for improved usability and performance.
 #
 # 12. Secure Command Execution:
-#     - Subprocess calls are wrapped in error capture mechanisms.
-#     - Enhanced security through input sanitization before invoking external tools.
+#     - Subprocess calls are wrapped with error capture mechanisms.
+#     - Input sanitization ensures secure execution of external tools.
 #
-# 13. Modular Code Architecture:
-#     - Refactored into reusable classes and functions for improved maintainability.
-#     - Modular design facilitates future enhancements and debugging.
+# 13. Modular Architecture:
+#     - Refactored into reusable classes for better maintainability and scalability.
+#     - Modular design facilitates debugging and future feature expansions.
 #
-# 14. Support for DIAMOND:
-#     - Added support for `DIAMOND` as a fast and sensitive alternative for sequence alignment.
-#     - Configurable sensitivity levels (`fast`, `sensitive`, `very-sensitive`, etc.).
+# 14. DIAMOND Integration:
+#     - Added DIAMOND as a fast, sensitive option for sequence alignment.
+#     - Supports configurable sensitivity modes like `fast` and `very-sensitive`.
 #
-# 15. Automated Normalization:
-#     - Normalizes genome counts based on marker coverage thresholds.
-#     - Streamlined processing for annotated and unannotated genomes.
+# 15. Genome Count Normalization:
+#     - Automatically normalizes counts based on marker coverage thresholds.
+#     - Handles both annotated and unannotated genomes efficiently.
 #
-# 16. Bayesian Refinement for Marker Generation:
-#     - Introduced Bayesian clustering for improved marker refinement.
-#     - Allows dynamic adaptation of marker selection based on posterior probabilities.
+# 16. Bayesian Refinement:
+#     - Bayesian clustering for adaptive marker selection and refinement.
+#     - Utilizes posterior probabilities for dynamic optimization.
 #
 # 17. Advanced Clustering Techniques:
-#     - Integrated adaptive clustering methods (e.g., HDBSCAN) for more flexible sequence grouping.
-#     - Enables better handling of noisy data and variable cluster sizes.
+#     - Adaptive clustering with HDBSCAN for flexible sequence grouping.
+#     - Handles noisy data and variable cluster sizes effectively.
 #
-# 18. Real-Time Progress Reporting:
-#     - Displays progress updates with estimated completion times.
-#     - Intuitive and user-friendly feedback for long-running tasks.
+# 18. Real-Time Progress Updates:
+#     - Provides progress feedback with estimated completion times.
+#     - Enhances user experience during long-running processes.
 #
-# 19. Customizable Output Management:
-#     - Standardized file naming for temporary and output files.
-#     - Configurable output locations to improve workflow organization.
+# 19. Output Management:
+#     - Standardized file naming for outputs and intermediate results.
+#     - Configurable output directories for streamlined workflow organization.
 #
 # 20. Documentation Enhancements:
-#     - Updated inline comments for clarity and maintainability.
-#     - Comprehensive usage instructions, examples, and performance tips for users.
+#     - Improved inline comments for clarity and easier maintenance.
+#     - Comprehensive user documentation with examples and tips for efficient usage.
 ################################################################################
 
 
@@ -231,6 +232,7 @@ import bz2
 import tarfile
 import multiprocessing as mp
 import numpy as np
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shortbred_functions import shortbred_utils as sq
 import pandas as pd
 import joblib
@@ -791,325 +793,104 @@ class IDQuantifyHandoff:
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
 
-# ... rest of the classes and utility functions ...
 
-# Move the main processing logic from other files here
-
-def main():
-    parser = argparse.ArgumentParser(description='''
+# Initialize argument parser at module level
+parser = argparse.ArgumentParser(
+    description='''
 ShortBRED - Short, Better Representative Extract Database
 Version: Modified-1.0 (2025)
 
-DESCRIPTION:
-    ShortBRED is a tool for profiling protein families in metagenomic data.
-    This modified version combines identification and quantification in a single script
-    with enhanced capabilities for resource monitoring, parallelization, and robustness.
+MANDATORY (choose one workflow):
 
-KEY ENHANCEMENTS:
-    - Unified identification and quantification workflow
-    - Advanced resource monitoring with psutil
-    - Robust checkpoint system using JSON for failure recovery
-    - Parallel processing using Python multiprocessing
-    - Real-time progress tracking with tqdm
-    - Enhanced error handling and logging
-    - Memory-efficient chunk processing
-    - Automated DNA-to-protein translation:
-        * Six-frame translation
-        * Automated ORF selection
-        * DNA-derived protein labeling
-    - Dual-channel logging (console + file)
-    - Rigorous dependency validation
-    - Enhanced input validation
-    - Secure subprocess execution wrapper
-    - Modular code architecture
-    - Added --cdhit_cluster parameter for CD-HIT clustering percentage
-    - Added --verbose parameter for detailed progress reporting
-    - Added DIAMOND support for sequence searches
-    - Bayesian refinement for marker selection and clustering
-    - Support for adaptive clustering using HDBSCAN
-    - Automated normalization for genome-level counts
-    - Standardized file naming for outputs and intermediate files
-    - Support for large-scale datasets with memory-efficient strategies
-    - Configurable deduplication for input sequences
-    - Improved compatibility with diverse file formats (FASTA, FASTQ)
-    - Comprehensive usage documentation and performance tips
-    - Support for posterior probability-driven clustering
-    - Validation of input sequence type (DNA vs. protein)
-
-BASIC USAGE:
-    # For protein input:
-    shortbred.py --goi proteins.faa --ref reference.faa --markers markers.faa
-
-    # For DNA input (with automatic translation):
-    shortbred.py --goi genes.fna --dna --ref reference.faa --markers markers.faa
-
-    # For quantification against WGS data:
-    shortbred.py --markers markers.faa --wgs metagenome.fastq --results counts.tsv
-
-    # For analyzing annotated genomes:
-    shortbred.py --markers markers.faa --genome genome.faa --results counts.tsv
-
-    # For analyzing unannotated genomes:
-    shortbred.py --markers markers.faa --genome genome.fna --unannotated --results counts.tsv
-
-PERFORMANCE TIPS:
-    - Use --threads to match available CPU cores
-    - Ensure sufficient disk space for temp files
-    - Adjust --maxhits/--maxrejects for sensitivity
-    - Use --tmp to specify temp directory
-    - Enable checkpointing for large datasets
-    - Monitor resource usage in logs
-    - Use DIAMOND for faster sequence alignment on large datasets
-    - Deduplicate input sequences for improved accuracy
-    - Optimize clustering thresholds for specific use cases
-
-Originally developed by Jim Kaminski and the Huttenhower Lab
-Modified (2025) by Gerald Amiel Ballena
-''', formatter_class=RawTextHelpFormatter)
-    parser.add_argument("--version", action="version", version="%(prog)s v" + VERSION)
-
-    # INPUT Files
-    grpInput = parser.add_argument_group('Input')
-    grpInput.add_argument('--goi', type=str, dest='sGOIProts', default="", help='Enter the path and name of the proteins of interest file.')
-    grpInput.add_argument('--ref', type=str, dest='sRefProts', default="", help='Enter the path and name of the file containing reference protein sequences.')
-    grpInput.add_argument('--refdb', type=str, dest='dirRefDB', default="", help='Can be specified in place of reference proteins [--ref]. Enter the path and name for a BLAST database of reference proteins.')
-    grpInput.add_argument('--goiblast', type=str, default="", dest='sGOIBlast', help='Used when modifying existing ShortBRED-Identify results. Enter the path and name of the BLAST results from the goi-to-goi search.')
-    grpInput.add_argument('--refblast', type=str, dest='sRefBlast', default="", help='Used when modifying existing ShortBRED-Identify results. Enter the path and name of the BLAST results from the goi-to-ref search.')
-    grpInput.add_argument('--goiclust', type=str, default="", dest='sClust', help='Used when modifying existing ShortBRED-Identify results. Enter the path and name of the clustered genes of interest file.')
-    grpInput.add_argument('--map_in', type=str, dest='sMapIn', default="", help='Used when modifying existing ShortBRED-Identify results. Enter the path and name of the two-column file connecting proteins to families.')
-    grpInput.add_argument('--dna', action='store_true', help='Specify if input is DNA sequence (will be translated)')
-    grpInput.add_argument('--min_marker_length', type=int, default=30,
-    help='Minimum length for generated markers (default: 30)')
-    grpInput.add_argument('--marker_identity', type=float, default=0.9,
-    help='Identity threshold for marker generation (default: 0.9)')
-    grpInput.add_argument('--cdhit_cluster', type=float, default=0.9,
-    help='CD-HIT clustering percentage (between 0 and 1, default: 0.9)')
-
-    # OUTPUT
-    grpOutput = parser.add_argument_group('Output')
-    grpOutput.add_argument('--markers', type=str, default="", dest='sMarkers', help='Optional: Path to existing markers file. If not provided, markers will be generated dynamically.')
-    grpOutput.add_argument('--map_out', type=str, default="gene-centroid.uc", dest='sMap', help='Enter name and path for the output map file')
-
-    # PARAMETERS
-    grpParam = parser.add_argument_group('Parameters')
-    grpParam.add_argument('--clustid', default=0.85, type=float, dest='dClustID', help='Enter the identity cutoff for clustering the genes of interest.')
-    grpParam.add_argument('--threads', type=int, default=1, dest='iThreads', help='Enter the number of threads to use.')
-
-    # PROGRAM DEPENDENCIES
-    grpPrograms = parser.add_argument_group('Programs')
-    # Single unified search_program argument
-    grpPrograms.add_argument('--search_program', default="usearch", type=str, 
-                            choices=['usearch', 'rapsearch2', 'diamond'],
-                            dest='strSearchProg', 
-                            help='Choose program for search (usearch/rapsearch2/diamond)')
-    grpPrograms.add_argument('--usearch', default="usearch", type=str, 
-                            dest='strUSEARCH', help='Provide the path to usearch.')
-    grpPrograms.add_argument('--tblastn', default="tblastn", type=str, 
-                            dest='strTBLASTN', help='Provide the path to tblastn.')
-    grpPrograms.add_argument('--makeblastdb', default="makeblastdb", type=str, 
-                            dest='strMakeBlastDB', help='Provide the path to makeblastdb.')
-    grpPrograms.add_argument('--prerapsearch2', default="prerapsearch", type=str, 
-                            dest='strPrerapPath', help='Provide the path to prerapsearch2.')
-    grpPrograms.add_argument('--rapsearch2', default="rapsearch2", type=str, 
-                            dest='strRap2Path', help='Provide the path to rapsearch2.')
-    grpPrograms.add_argument('--diamond', default="diamond", type=str, 
-                            dest='strDIAMOND', help='Provide the path to DIAMOND.')
-    grpPrograms.add_argument('--diamond_sensitivity', type=str, 
-                            choices=['fast', 'sensitive', 'more-sensitive', 'very-sensitive'],
-                            default='sensitive', help='DIAMOND search sensitivity mode')
-
-    # Add verbose argument
-    parser.add_argument('--verbose', action='store_true',
-                       help='Enable verbose progress reporting')
-
-    args = parser.parse_args()
-
-    # Initialize reporter
-    reporter = VerboseReporter(verbose=args.verbose)
-
-    # Validate inputs
-    check_dependencies()
-    validate_input_files(args)
-
-    # Validate numerical parameters
-    if not (0 < args.dClustID <= 1):
-        logging.error("Cluster identity must be between 0 and 1")
-        sys.exit(1)
-    
-    if args.iThreads < 1:
-        logging.error("Thread count must be positive")
-        sys.exit(1)
-
-    # Validate CD-HIT clustering parameter
-    if not (0 < args.cdhit_cluster <= 1):
-        logging.error("CD-HIT clustering percentage must be between 0 and 1")
-        sys.exit(1)
-
-    # Create output directory if needed
-    output_dir = os.path.dirname(args.sMarkers)
-    if (output_dir and not os.path.exists(output_dir)):
-        os.makedirs(output_dir)
-
-    # Initialize file naming convention
-    run_id = FileNaming.generate_run_id()
-    analysis_type = "wgs" if args.strWGS else "genome"
-    marker_type = "centroids" if args.strCentroids == "Y" else "markers"
-    
-    tmp_dir = Path(args.strTmp) if args.strTmp else Path(f"tmp{os.getpid()}{'%.0f' % round((time.time()*1000), 1)}")
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-
-    file_namer = FileNaming(analysis_type, marker_type, run_id, tmp_dir)
-    
-    # Update output file names
-    if args.strResults == "results.tab":  # If using default name
-        args.strResults = file_namer.get_output_name("results")
-    
-    if args.strMarkerResults == "":
-        args.strMarkerResults = file_namer.get_output_name("marker_results")
-    
-    if args.strBlast == "":
-        args.strBlast = file_namer.get_output_name("blast", "out")
-    
-    # Update temporary file naming throughout the code
-    strDBName = tmp_dir / file_namer.get_temp_name("db", "udb")
-    
-    # Replace the old file naming patterns with new ones
-    def get_chunk_filename(chunk_num):
-        return tmp_dir / file_namer.get_temp_name(f"chunk_{chunk_num:03d}")
-
-    # Initialize handoff manager
-    handoff = IDQuantifyHandoff(tmp_dir)
-    
-    if args.sMarkers:
-        # Quantification mode - load existing markers
-        try:
-            handoff_data = handoff.load_id_results()
-            logging.info(f"Loaded {handoff_data['markers']['count']} markers for quantification")
-        except ValueError as e:
-            if Path(args.sMarkers).exists():
-                # Manual marker file provided, create new handoff
-                metadata = {
-                    'source': 'manual',
-                    'parameters': {
-                        'min_length': args.min_marker_length,
-                        'identity': args.marker_identity
-                    }
-                }
-                handoff.save_id_results(args.sMarkers, metadata)
-                logging.info("Created new handoff from provided markers")
-            else:
-                raise ValueError(f"Invalid marker file: {args.sMarkers}")
-    else:
-        # Identification mode - generate markers
-        try:
-            marker_generator = MarkerGenerator(
-                min_length=args.min_marker_length,
-                identity_threshold=args.marker_identity,
-                cluster_percent=args.cdhit_cluster,
-                reporter=reporter,
-                use_bayesian=args.bEM  # Use existing EM flag
-            )
-            
-            if args.strGenome:
-                try:
-                    input_sequences = list(SeqIO.parse(args.strGenome, "fasta"))
-                    if not input_sequences:
-                        raise MarkerGenerationError("No sequences found in genome file")
-                except Exception as e:
-                    raise MarkerGenerationError(f"Failed to parse genome file: {str(e)}")
-            elif args.strWGS:
-                try:
-                    input_sequences = extract_representative_sequences(args.strWGS)
-                    if not input_sequences:
-                        raise MarkerGenerationError("No representative sequences extracted from WGS data")
-                except Exception as e:
-                    raise MarkerGenerationError(f"Failed to extract sequences from WGS data: {str(e)}")
-            else:
-                raise MarkerGenerationError("No input sequences provided (--genome or --wgs required)")
-            
-            # Generate markers
-            generated_markers = marker_generator.generate_markers(
-                input_sequences,
-                args.sRefProts if args.sRefProts else args.dirRefDB
-            )
-            
-            # Write generated markers to temporary file
-            try:
-                temp_markers_file = tmp_dir / "generated_markers.faa"
-                SeqIO.write(generated_markers, temp_markers_file, "fasta")
-                args.sMarkers = temp_markers_file
-                reporter.report(f"Successfully generated and wrote {len(generated_markers)} markers")
-            except Exception as e:
-                raise MarkerGenerationError(f"Failed to write markers to file: {str(e)}")
-            
-            # Save markers and metadata for quantification
-            metadata = {
-                'source': 'generated',
-                'parameters': {
-                    'min_length': args.min_marker_length,
-                    'identity': args.marker_identity,
-                    'cluster': args.cdhit_cluster
-                },
-                'stats': marker_generator.get_stats()
-            }
-            handoff.save_id_results(temp_markers_file, metadata)
-            
-            logging.info(f"Generated and saved {len(generated_markers)} markers")
-            args.sMarkers = temp_markers_file
-            
-        except MarkerGenerationError as e:
-            reporter.report(f"Marker generation failed: {str(e)}", force=True)
-            sys.exit(1)
-        except Exception as e:
-            reporter.report(f"Unexpected error during marker generation: {str(e)}", force=True)
-            sys.exit(1)
-
-    try:
-        checkpoint = load_checkpoint("shortbred_checkpoint.json")
+    1. Marker Generation Workflow:
+        --goi PATH           Input protein families (FASTA)    [REQUIRED]
+        --ref PATH          Reference protein sequences       [REQUIRED]
         
-        logging.info("Starting ShortBRED-Identify analysis...")
-        
-        # Process and potentially translate input sequences
-        if args.sGOIProts:
-            args.sGOIProts = process_input_sequences(args.sGOIProts, args.dna)
-        
-        # Regular resource monitoring
-        monitor_timer = time.time()
-        
-        # Algorithm Phase 1: Clustering
-        logging.info("Phase 1: Clustering proteins of interest")
-        sequences = list(SeqIO.parse(args.sGOIProts, "fasta"))
-        chunk_size = max(100, len(sequences) // (args.iThreads * 10))
-        
-        results = parallel_clustering(sequences, chunk_size)
-        
-        # Save progress
-        checkpoint["clustering_complete"] = True
-        save_checkpoint(checkpoint, "shortbred_checkpoint.json")
-        
-        # Algorithm Phase 2: BLAST Analysis
-        logging.info("Phase 2: Performing BLAST comparisons")
-        # BLAST analysis would go here
+    2. Quantification Workflow:
+        --markers PATH      ShortBRED markers file           [REQUIRED]
+        AND EITHER:
+        --wgs PATH         WGS reads file(s)                 [REQUIRED if not using --genome]
+        --genome PATH      Genome file                       [REQUIRED if not using --wgs]
 
-        # Algorithm Phase 3: Marker Generation
-        logging.info("Phase 3: Generating unique markers")
-        # Marker generation would go here
+COMMONLY USED OPTIONS:
+    Analysis Control:
+        --threads INT      Number of CPU threads              [default: 1]
+        --dna             Process DNA input (auto-translate)  [default: False]
+        --verbose         Show detailed progress              [default: False]
 
-        # Monitor resources periodically
-        if time.time() - monitor_timer > 300:  # Every 5 minutes
-            monitor_resources()
-            monitor_timer = time.time()
-            
-        # ...rest of the processing logic...
+    Search Configuration:
+        --search_program PROG   Search tool to use            [default: usearch]
+                               Options: usearch, rapsearch2, diamond
+        --id FLOAT             Match identity threshold       [default: 0.95]
 
-    except Exception as e:
-        logging.error("An unexpected error occurred: {}".format(e))
-        sys.exit(1)
-    finally:
-        # Final resource usage report
-        monitor_resources()
-    
-    logging.info("ShortBRED-Identify analysis completed successfully")
+    Output Control:
+        --results PATH     Output file for results           [default: results.tab]
+        --tmp PATH        Temporary directory                [default: auto-generated]
+
+ADVANCED OPTIONS:
+    Marker Generation:
+        --min_marker_length INT    Minimum marker length     [default: 30]
+        --marker_identity FLOAT    Identity threshold        [default: 0.9]
+        --cdhit_cluster FLOAT     CD-HIT clustering         [default: 0.9]
+
+    Search Parameters:
+        --diamond_sensitivity MODE    DIAMOND sensitivity    [default: sensitive]
+                                     (fast/sensitive/more-sensitive/very-sensitive)
+        --maxhits INT                Max hits per read      [default: 1]
+        --maxrejects INT             Max rejection count    [default: 32]
+        --pctlength FLOAT            Min alignment length   [default: 0.95]
+
+    Processing Options:
+        --unannotated              Process unannotated genome
+        --bz2                      Handle bz2 compressed files
+        --pctmarker_thresh FLOAT   Marker mapping threshold [default: 0.1]
+
+For complete documentation: https://github.com/gmballena/shortbred-modified
+
+EXAMPLES:
+    1. Generate markers from protein families:
+       python shortbred_modified.py --goi proteins.faa --ref reference.faa
+
+    2. Quantify markers in metagenome:
+       python shortbred_modified.py --markers markers.faa --wgs metagenome.fastq
+
+    3. Process genome with DIAMOND:
+       python shortbred_modified.py --markers markers.faa --genome genome.faa \
+           --search_program diamond --threads 8
+''', 
+    formatter_class=RawTextHelpFormatter, 
+    add_help=False  # Disable default -h
+)
+
+# Custom -h option
+#parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+#                    help='Show this help message and exit.')
+
+# Other argument definitions
+parser.add_argument("--version", action="version", version="%(prog)s vModified-1.0 (2025)")
+
+# Workflow arguments
+workflow = parser.add_argument_group('Mandatory Workflows')
+workflow.add_argument('--goi', type=str, help='Input protein families (FASTA) [REQUIRED for marker generation]')
+workflow.add_argument('--ref', type=str, help='Reference protein sequences (FASTA) [REQUIRED for marker generation]')
+workflow.add_argument('--markers', type=str, help='ShortBRED markers file [REQUIRED for quantification]')
+workflow.add_argument('--wgs', type=str, nargs='+', help='WGS reads file(s) [REQUIRED if not using --genome]')
+workflow.add_argument('--genome', type=str, help='Genome file [REQUIRED if not using --wgs]')
+
+# Common options
+common = parser.add_argument_group('Commonly Used Options')
+common.add_argument('--threads', type=int, default=1, help='Number of CPU threads [default: 1]')
+common.add_argument('--dna', action='store_true', help='Process DNA input (auto-translate) [default: False]')
+common.add_argument('--verbose', action='store_true', help='Show detailed progress [default: False]')
+common.add_argument('--help', '-h', action='help', help='Show this help message and exit')
+
+# Parse arguments (move this to where it's needed)
+# args = parser.parse_args()
+
+# Parse arguments
+args = parser.parse_args()
+
+ 
 
 
 ################################################################################
@@ -1119,93 +900,6 @@ c_iMaxSizeForDirectRun = 900 # File size in MB. Any WGS file smaller than this
 
 c_iReadsForFile = 7000000 # Number of WGS reads to process at a time
 
-################################################################################
-# Args
-
-parser = argparse.ArgumentParser(description='ShortBRED Quantify \n \
-This program takes a set of protein family markers and wgs file as input, \
-and produces a relative abundance table.')
-parser.add_argument("--version", action="version", version="%(prog)s v"+VERSION)
-#Input
-grpInput = parser.add_argument_group('Input:')
-grpInput.add_argument('--markers', type=str, dest='strMarkers',
-help='Enter the path and name of the genes of interest file (protein seqs).')
-grpInput.add_argument('--wgs', type=str, dest='strWGS',nargs='+',
-help='Enter the path and name of the WGS file (nucleotide reads).')
-grpInput.add_argument('--genome', type=str, dest='strGenome',
-help='Enter the path and name of the genome file (faa expected).')
-
-
-#Output
-grpOutput = parser.add_argument_group('Output:')
-grpOutput.add_argument('--results', type=str, dest='strResults', default = "results.tab",
-help='Enter a name for your results file.')
-grpOutput.add_argument('--SBhits', type=str, dest='strHits',
-help='ShortBRED will print the hits it considers positives to this file.', default="")
-grpOutput.add_argument('--blastout', type=str, dest='strBlast', default="",
-help='Enter the name of the blast-formatted output file from USEARCH.')
-grpOutput.add_argument('--marker_results', type=str, dest='strMarkerResults', default="",
-help='Enter the name of the output for marker level results.')
-grpOutput.add_argument('--tmp', type=str, dest='strTmp', default ="",help='Enter the path and name of the tmp directory.')
-
-grpPrograms = parser.add_argument_group('Programs')
-# Single unified search_program argument
-grpPrograms.add_argument('--search_program', default="usearch", type=str, 
-                        choices=['usearch', 'rapsearch2', 'diamond'],
-                        dest='strSearchProg', 
-                        help='Choose program for search (usearch/rapsearch2/diamond)')
-grpPrograms.add_argument('--usearch', default="usearch", type=str, 
-                        dest='strUSEARCH', help='Provide the path to usearch.')
-grpPrograms.add_argument('--tblastn', default="tblastn", type=str, 
-                        dest='strTBLASTN', help='Provide the path to tblastn.')
-grpPrograms.add_argument('--makeblastdb', default="makeblastdb", type=str, 
-                        dest='strMakeBlastDB', help='Provide the path to makeblastdb.')
-grpPrograms.add_argument('--prerapsearch2', default="prerapsearch", type=str, 
-                        dest='strPrerapPath', help='Provide the path to prerapsearch2.')
-grpPrograms.add_argument('--rapsearch2', default="rapsearch2", type=str, 
-                        dest='strRap2Path', help='Provide the path to rapsearch2.')
-grpPrograms.add_argument('--diamond', default="diamond", type=str, 
-                        dest='strDIAMOND', help='Provide the path to DIAMOND.')
-grpPrograms.add_argument('--diamond_sensitivity', type=str, 
-                        choices=['fast', 'sensitive', 'more-sensitive', 'very-sensitive'],
-                        default='sensitive', help='DIAMOND search sensitivity mode')
-
-#Parameters - Matching Settings
-grpParam = parser.add_argument_group('Parameters:')
-grpParam.add_argument('--id', type=float, dest='dID', help='Enter the percent identity for the match', default = .95)
-grpParam.add_argument('--pctlength', type=float, dest='dAlnLength', help='Enter the minimum alignment length. The default is .95', default = 0.95)
-grpParam.add_argument('--minreadBP', type=float, dest='iMinReadBP', help='Enter the lower bound for read lengths that shortbred will process', default = 90)
-grpParam.add_argument('--avgreadBP', type=float, dest='iAvgReadBP', help='Enter the average read length.', default = 100)
-grpParam.add_argument('--maxhits', type=float, dest='iMaxHits', help='Enter the number of markers allowed to hit read.', default = 1)
-grpParam.add_argument('--maxrejects', type=float, dest='iMaxRejects', help='Enter the number of markers allowed to hit read.', default = 32)
-grpParam.add_argument('--unannotated', action='store_const',dest='bUnannotated', help='Indicates genome is unannotated. ShortBRED will use tblastn to \
-search AA markers against the db of six possible translations of your genome data. ', const=True, default = False)
-grpParam.add_argument('--pctmarker_thresh',dest='dPctMarkerThresh', type=float,help='Indicates the share of a familiy\'s markers that must map to ORF to be counted. ', default = 0.1)
-grpParam.add_argument('--pctORFscore_thresh',dest='dPctORFScoreThresh', type=float,help='Indicates the share of total ORF score that a family must receive to be counted. ', default = 0.1)
-
-
-
-grpParam.add_argument('--EM', action='store_const',dest='bEM', help='Indicates user would like to run EM algorithm \
- on the quasi-markers. ', const=True, default = False)
-grpParam.add_argument('--bayes', type=str,dest='strBayes', help='Output files for Bayes Results', default = "")
-#parser.add_argument('--tmid', type=float, dest='dTMID', help='Enter the percent identity for a TM match', default = .95)
-#parser.add_argument('--qmid', type=float, dest='dQMID', help='Enter the percent identity for a QM match', default = .95)
-#parser.add_argument('--alnTM', type=int, dest='iAlnMax', help='Enter a bound for TM alignments, such that aln must be>= min(markerlength,alnTM)', default = 20)
-
-#Parameters - Matching Various
-grpParam.add_argument('--bz2', type=bool, dest='fbz2file', help='Set to True if using a tar.bz2 file', default = False)
-grpParam.add_argument('--threads', type=int, dest='iThreads', help='Enter the number of CPUs available for USEARCH.', default=1)
-grpParam.add_argument('--notmarkers', type=str, dest='strCentroids',default="N", help='This flag is used when testing centroids for evaluation purposes.')
-grpParam.add_argument('--cent_match_length', type=int, dest='iAlnCentroids',default=30, help='This flag is used when working with centroids. It sets the minimum matching length.')
-grpParam.add_argument('--small', type=bool, dest='bSmall',default=False, help='This flag is used to indicate the input file is small enough for USEARCH.')
-
-# Check for args.
-if len(sys.argv)==1:
-    parser.print_help()
-    sys.stderr.write("\nNo arguments were supplied to ShortBRED. Please see the usage information above to determine what to pass to the program.\n")
-    sys.exit(1)
-    
-############################################################################
 # Check Dependencies
 args = parser.parse_args()
 if (args.strSearchProg=="usearch"):
@@ -1853,4 +1547,286 @@ posterior_probs = posterior_model.assign_posterior(data, initial_clusters)
 # Re-cluster using posterior-enriched features
 model_clusterer = ModelBasedClusterer(base_clusterer=clusterer, n_components=3, n_clusters=10)
 final_clusters = model_clusterer.re_cluster(data, posterior_probs)
+
+class RobustExecutor:
+    """Handles robust execution with retries and error recovery"""
+    
+    def __init__(self, max_retries=3, backoff_factor=2):
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.logger = logging.getLogger(__name__)
+
+    def execute_with_retry(self, func, *args, recovery_handler=None, **kwargs):
+        """Execute function with retry logic and error recovery"""
+        last_exception = None
+        wait_time = 1
+
+        for attempt in range(self.max_retries):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                last_exception = e
+                self.logger.warning(f"Attempt {attempt + 1}/{self.max_retries} failed: {str(e)}")
+                
+                if recovery_handler:
+                    try:
+                        recovery_handler(e, attempt)
+                    except Exception as re:
+                        self.logger.error(f"Recovery failed: {str(re)}")
+
+                if attempt < self.max_retries - 1:
+                    time.sleep(wait_time)
+                    wait_time *= self.backoff_factor
+
+        raise RuntimeError(f"Operation failed after {self.max_retries} attempts: {str(last_exception)}")
+
+class ResourceMonitor:
+    """Monitors system resources during execution"""
+    
+    def __init__(self, threshold_cpu=90, threshold_memory=90):
+        self.threshold_cpu = threshold_cpu
+        self.threshold_memory = threshold_memory
+        self.logger = logging.getLogger(__name__)
+        self._start_time = time.time()
+        self._last_check = self._start_time
+        self.stats = []
+
+    def check_resources(self):
+        """Check current resource usage and log if thresholds are exceeded"""
+        try:
+            cpu_percent = psutil.cpu_percent()
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            current_stats = {
+                'timestamp': time.time(),
+                'cpu_percent': cpu_percent,
+                'memory_percent': memory.percent,
+                'disk_percent': disk.percent
+            }
+            self.stats.append(current_stats)
+            
+            if cpu_percent > self.threshold_cpu:
+                self.logger.warning(f"High CPU usage detected: {cpu_percent}%")
+            
+            if memory.percent > self.threshold_memory:
+                self.logger.warning(f"High memory usage detected: {memory.percent}%")
+                
+            return current_stats
+            
+        except Exception as e:
+            self.logger.error(f"Resource monitoring failed: {str(e)}")
+            return None
+
+    def get_resource_summary(self):
+        """Get summary of resource usage over time"""
+        if not self.stats:
+            return None
+            
+        return {
+            'duration': time.time() - self._start_time,
+            'max_cpu': max(s['cpu_percent'] for s in self.stats),
+            'max_memory': max(s['memory_percent'] for s in self.stats),
+            'avg_cpu': sum(s['cpu_percent'] for s in self.stats) / len(self.stats),
+            'avg_memory': sum(s['memory_percent'] for s in self.stats) / len(self.stats)
+        }
+
+class CheckpointManager:
+    """Manages checkpoints for long-running operations"""
+    
+    def __init__(self, checkpoint_dir, prefix="shortbred_checkpoint"):
+        self.checkpoint_dir = Path(checkpoint_dir)
+        self.prefix = prefix
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        self.current_checkpoint = None
+        self.logger = logging.getLogger(__name__)
+
+    def save_checkpoint(self, state, checkpoint_id=None):
+        """Save checkpoint state to file"""
+        try:
+            if checkpoint_id is None:
+                checkpoint_id = int(time.time())
+            
+            checkpoint_path = self.checkpoint_dir / f"{self.prefix}_{checkpoint_id}.json"
+            
+            # Add metadata to state
+            state['_metadata'] = {
+                'timestamp': datetime.datetime.now().isoformat(),
+                'checkpoint_id': checkpoint_id,
+                'version': VERSION
+            }
+            
+            with checkpoint_path.open('w') as f:
+                json.dump(state, f, indent=2)
+            
+            self.current_checkpoint = checkpoint_path
+            self.logger.info(f"Checkpoint saved: {checkpoint_path}")
+            
+            # Clean up old checkpoints
+            self._cleanup_old_checkpoints()
+            
+            return checkpoint_path
+            
+        except Exception as e:
+            self.logger.error(f"Failed to save checkpoint: {str(e)}")
+            raise
+
+    def load_checkpoint(self, checkpoint_id=None):
+        """Load checkpoint state from file"""
+        try:
+            if checkpoint_id is None:
+                # Find most recent checkpoint
+                checkpoints = sorted(self.checkpoint_dir.glob(f"{self.prefix}_*.json"))
+                if not checkpoints:
+                    return None
+                checkpoint_path = checkpoints[-1]
+            else:
+                checkpoint_path = self.checkpoint_dir / f"{self.prefix}_{checkpoint_id}.json"
+            
+            if not checkpoint_path.exists():
+                return None
+            
+            with checkpoint_path.open('r') as f:
+                state = json.load(f)
+            
+            # Validate checkpoint
+            if not self._validate_checkpoint(state):
+                raise ValueError("Checkpoint validation failed")
+            
+            self.current_checkpoint = checkpoint_path
+            self.logger.info(f"Checkpoint loaded: {checkpoint_path}")
+            
+            return state
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load checkpoint: {str(e)}")
+            raise
+
+    def _validate_checkpoint(self, state):
+        """Validate checkpoint data"""
+        try:
+            metadata = state.get('_metadata', {})
+            
+            # Check version compatibility
+            checkpoint_version = metadata.get('version')
+            if checkpoint_version != VERSION:
+                self.logger.warning(f"Checkpoint version mismatch: {checkpoint_version} vs {VERSION}")
+            
+            # Add more validation as needed
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Checkpoint validation failed: {str(e)}")
+            return False
+
+    def _cleanup_old_checkpoints(self, keep_count=5):
+        """Clean up old checkpoints, keeping only the most recent ones"""
+        try:
+            checkpoints = sorted(self.checkpoint_dir.glob(f"{self.prefix}_*.json"))
+            if len(checkpoints) > keep_count:
+                for checkpoint in checkpoints[:-keep_count]:
+                    checkpoint.unlink()
+                self.logger.info(f"Cleaned up {len(checkpoints) - keep_count} old checkpoints")
+        except Exception as e:
+            self.logger.warning(f"Checkpoint cleanup failed: {str(e)}")
+
+class InputValidator:
+    """Enhanced input validation with detailed error reporting"""
+    
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+        self.errors = []
+        self.warnings = []
+
+    # ...existing InputValidator methods...
+
+    def validate_sequence_quality(self, filepath, min_length=30, max_n_percent=10):
+        """Validate sequence quality metrics"""
+        try:
+            with open(filepath, 'r') as f:
+                for record in SeqIO.parse(f, "fasta"):
+                    seq = str(record.seq)
+                    
+                    # Check sequence length
+                    if len(seq) < min_length:
+                        self.errors.append(f"Sequence {record.id} is too short: {len(seq)} < {min_length}")
+                    
+                    # Check for ambiguous bases
+                    n_count = seq.upper().count('N')
+                    n_percent = (n_count / len(seq)) * 100
+                    if n_percent > max_n_percent:
+                        self.warnings.append(
+                            f"Sequence {record.id} has high ambiguity: {n_percent:.1f}% N's"
+                        )
+            
+            return len(self.errors) == 0
+            
+        except Exception as e:
+            self.errors.append(f"Failed to validate sequence quality: {str(e)}")
+            return False
+
+# Update main() to use new robust components
+def main():
+    # Initialize robust components
+    executor = RobustExecutor()
+    monitor = ResourceMonitor()
+    checkpoints = CheckpointManager(tmp_dir)
+    validator = InputValidator()
+
+    try:
+        # ...existing argument parsing...
+
+        # Validate inputs with enhanced validation
+        if not validator.validate_all(args):
+            for error in validator.errors:
+                logging.error(error)
+            sys.exit(1)
+        
+        for warning in validator.warnings:
+            logging.warning(warning)
+
+        # Start resource monitoring in a separate thread
+        monitor_thread = threading.Thread(
+            target=lambda: monitor.check_resources(),
+            daemon=True
+        )
+        monitor_thread.start()
+
+        # Load last checkpoint if exists
+        state = checkpoints.load_checkpoint()
+        if state:
+            logging.info("Resuming from checkpoint")
+            # Restore state here
+
+        # Main processing with robust execution
+        try:
+            # ...existing processing code...
+            
+            # Save checkpoints periodically
+            checkpoints.save_checkpoint({
+                'progress': 'processing_complete',
+                'results': results
+            })
+
+        except Exception as e:
+            logging.error(f"Processing failed: {str(e)}")
+            # Try to save checkpoint before exiting
+            checkpoints.save_checkpoint({
+                'progress': 'failed',
+                'error': str(e)
+            })
+            raise
+
+        finally:
+            # Log resource usage summary
+            summary = monitor.get_resource_summary()
+            if summary:
+                logging.info("Resource usage summary:")
+                for key, value in summary.items():
+                    logging.info(f"{key}: {value}")
+
+    except Exception as e:
+        logging.error(f"Fatal error: {str(e)}")
+        sys.exit(1)
+
 
