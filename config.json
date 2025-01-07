@@ -1,0 +1,23 @@
+{
+    "name": "markers",
+    "version": "1.0.0",
+    "description": "Marker configuration",
+    "settings": {
+        "defaultColor": "#FF0000",
+        "opacity": 0.8,
+        "styles": [
+            {
+                "id": "highlight",
+                "color": "#FFFF00",
+                "width": 2
+            },
+            {
+                "id": "underline",
+                "color": "#0000FF",
+                "width": 1
+            }
+        ]
+    },
+    "enabled": true,
+    "debug": false
+}
