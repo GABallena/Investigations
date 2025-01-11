@@ -9,33 +9,82 @@ from hiveplotlib.viz import hive_plot_viz
 from matplotlib.lines import Line2D
 from scipy.interpolate import interp1d
 
-def get_curved_path(start, end, tension=1):
-    """Generate curved path between two points through center with stronger central force"""
+def calculate_string_attraction(pos1, pos2, rest_length=0.3, k=0.5):
+    """Calculate spring-like attraction force between two points with stronger bundling"""
+    diff = np.array(pos2) - np.array(pos1)
+    distance = np.linalg.norm(diff)
+    # Increased force constant (k) and reduced rest length for tighter bundling
+    force = k * (distance - rest_length)
+    # Add exponential component for stronger bundling at larger distances
+    force *= (1 + 0.2 * np.exp(distance - 1))
+    # Normalize and scale
+    return (diff / distance) * force if distance > 0 else np.zeros(2)
+
+def get_curved_path(start, end, tension=1.2):
+    """Generate straight radial paths from center"""
     center = np.array([0, 0])
     start = np.array(start)
     end = np.array(end)
     
-    # Increase control point attraction to center (was 0.6, now 0.8)
-    ctrl1 = start + (center - start)
-    ctrl2 = end + (center - end)
+    # Calculate angles
+    start_angle = np.arctan2(start[1], start[0])
+    end_angle = np.arctan2(end[1], end[0])
+    start_dist = np.linalg.norm(start)
+    end_dist = np.linalg.norm(end)
     
-    # Use more points for smoother curves
-    t = np.linspace(0, 1, 150)
+    # Create points along path
+    t = np.linspace(0, 1, 100)
     
-    # Adjust Bezier curve with stronger bundling
-    curve_x = (1-t)**4 * start[0] + \
-             4*t*(1-t)**3 * ctrl1[0] + \
-             4*t**2*(1-t)**2 * center[0] + \
-             4*t**3*(1-t) * ctrl2[0] + \
-             t**4 * end[0]
-             
-    curve_y = (1-t)**4 * start[1] + \
-             4*t*(1-t)**3 * ctrl1[1] + \
-             4*t**2*(1-t)**2 * center[1] + \
-             4*t**3*(1-t) * ctrl2[1] + \
-             t**4 * end[1]
+    # First segment: from center to midpoint of target angle
+    t1 = t[t <= 0.5]
+    mid_angle = (start_angle + end_angle) / 2
+    r1 = np.interp(t1, [0, 0.5], [0, end_dist])
+    x1 = r1 * np.cos(mid_angle)
+    y1 = r1 * np.sin(mid_angle)
+    
+    # Second segment: from midpoint to end
+    t2 = t[t > 0.5]
+    angle_interp = np.interp(t2, [0.5, 1], [mid_angle, end_angle])
+    r2 = np.interp(t2, [0.5, 1], [end_dist, end_dist])
+    x2 = r2 * np.cos(angle_interp)
+    y2 = r2 * np.sin(angle_interp)
+    
+    # Combine segments
+    curve_x = np.concatenate([x1, x2])
+    curve_y = np.concatenate([y1, y2])
     
     return curve_x, curve_y
+
+def get_curved_path_with_gradient(start, end, tension=1.2):
+    """Generate straight radial paths from center with color gradient"""
+    center = np.array([0, 0])
+    start = np.array(start)
+    end = np.array(end)
+    
+    # Calculate angles
+    start_angle = np.arctan2(start[1], start[0])
+    end_angle = np.arctan2(end[1], end[0])
+    end_dist = np.linalg.norm(end)
+    
+    # Create points along path with more segments for smoother gradient
+    num_segments = 50
+    t = np.linspace(0, 1, num_segments)
+    
+    # Generate path coordinates
+    mid_angle = (start_angle + end_angle) / 2
+    r = np.interp(t, [0, 1], [0, end_dist])
+    angle = np.interp(t, [0, 1], [mid_angle, end_angle])
+    
+    x = r * np.cos(angle)
+    y = r * np.sin(angle)
+    
+    # Create color gradient from red to blue
+    colors = np.zeros((len(t), 4))
+    colors[:, 0] = np.interp(t, [0, 1], [1, 0])  # Red component
+    colors[:, 2] = np.interp(t, [0, 1], [0, 1])  # Blue component
+    colors[:, 3] = 0.3  # Alpha
+    
+    return x, y, colors
 
 def connection_bundle(from_nodes, to_nodes, pos, alpha=0.2, color='skyblue', width=0.9, tension=1):
     """Create connection bundle visualization"""
@@ -46,7 +95,7 @@ def connection_bundle(from_nodes, to_nodes, pos, alpha=0.2, color='skyblue', wid
         plt.plot(curve_x, curve_y, color=color, alpha=alpha, linewidth=width)
 
 # Load and process raw data
-df = pd.read_csv('IMGPR_plasmid_data.tsv', sep='\t')
+df = pd.read_csv('IMGPR/IMGPR_plasmid_data.tsv', sep='\t')
 
 # Create direct connections from raw data
 G = nx.Graph()
@@ -252,10 +301,12 @@ pos = grouped_circular_layout(G_sub, [arg_nodes, genus_nodes, eco_nodes], genus_
 for start in arg_nodes:
     for end in G.neighbors(start):
         if end in genus_nodes or end in eco_nodes:
-            start_type = 'arg_'
-            edge_color = node_colors[start_type]
-            curve_x, curve_y = get_curved_path(pos[start], pos[end])
-            plt.plot(curve_x, curve_y, color=edge_color, alpha=0.2, linewidth=0.5)
+            curve_x, curve_y, colors = get_curved_path_with_gradient(pos[start], pos[end])
+            # Draw gradient line segment by segment
+            for i in range(len(curve_x)-1):
+                plt.plot(curve_x[i:i+2], curve_y[i:i+2], 
+                        color=colors[i],
+                        linewidth=0.3)
 
 # Then draw environment-taxa connections
 for eco_node in eco_nodes:
@@ -265,13 +316,16 @@ for eco_node in eco_nodes:
         if any(keyword.lower() in eco_name.lower() for keyword in keywords):
             eco_category = category
             break
-    edge_color = node_colors[f'eco_{eco_category}']
     
     # Connect to all neighbor genera
     for genus_node in G.neighbors(eco_node):
         if genus_node in genus_nodes:  # ensure it's a genus node
-            curve_x, curve_y = get_curved_path(pos[eco_node], pos[genus_node])
-            plt.plot(curve_x, curve_y, color=edge_color, alpha=0.1, linewidth=0.3)
+            curve_x, curve_y, colors = get_curved_path_with_gradient(pos[eco_node], pos[genus_node])
+            # Draw gradient line segment by segment
+            for i in range(len(curve_x)-1):
+                plt.plot(curve_x[i:i+2], curve_y[i:i+2], 
+                        color=colors[i],
+                        linewidth=0.2)
 
 # Draw nodes with type-specific colors
 for node in G_sub.nodes():
@@ -419,7 +473,7 @@ draw_taxonomy_arcs(node_angles, taxonomy_hierarchy)
 plt.title("Edge Bundle Visualization\n" +
           "Orange: ARGs | Red: Pathogenic Taxa | Grey: Other Taxa\n" +
           "Ecosystem colors: Orange: Host-associated | Green: Engineered | Blue: Environmental\n" +
-          "Outer arcs show taxonomic relationships",
+          "Outer arcs show taxonomic relationships | Edge colors: Red → Blue shows direction",
           fontsize=16, pad=20)
 
 # Save and close

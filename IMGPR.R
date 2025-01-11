@@ -21,7 +21,7 @@ create_color_palette <- function() {
 # Data loading and validation
 tryCatch({
   setwd("~/Desktop/Side")
-  data <- read_tsv("IMGPR_plasmid_data.tsv") %>%
+  data <- read_tsv("IMGPR/IMGPR_plasmid_data.tsv") %>%
     mutate(arg_genes = map_dbl(arg_genes, process_arg_genes))
   
   required_cols <- c("ecosystem", "host_taxonomy", "plasmid_id", "topology", "arg_genes")
@@ -118,6 +118,5 @@ create_final_plot <- function(base_plot, vertices, from, to) {
 # Generate and save final plot
 final_plot <- create_final_plot(base_plot, vertices, from, to)
 ggsave("final_visualization.png", plot = final_plot, width = 10, height = 10)
-
 
 
