@@ -41,3 +41,5 @@
 !*.hpp
 !*.php
 !*.sh
+!*.ipynb
+IMGPR_plasmid_data.tsv
