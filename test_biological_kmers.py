@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
+import os
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import classification_report
 from biological_kmers import (
     extract_features,
     create_feature_vector,
@@ -22,9 +24,22 @@ from biological_kmers import (
     ModelPersistence,
     feature_generator
 )
+import itertools
+
+# UniProt SwissProt database file
+UNIPROT_SPROT_PATH = os.path.join(os.path.dirname(__file__), "data", "uniprot_sprot.fasta")
 
 class TestBiologicalKmers(unittest.TestCase):
+    # Standard kmer sizes for biological sequence analysis
+    KMER_21 = 21
+    KMER_31 = 31
+    KMER_41 = 41
+    KMER_51 = 51
+    VALID_KMER_SIZES = [KMER_21, KMER_31, KMER_41, KMER_51]
+
     def setUp(self):
+        # Ensure uniprot directory exists
+        os.makedirs(os.path.dirname(UNIPROT_SPROT_PATH), exist_ok=True)
         # Test sequences
         self.test_seq = "ATGCATGCATGC"
         self.simple_seq = "AAAA"
@@ -53,12 +68,22 @@ class TestBiologicalKmers(unittest.TestCase):
             create_feature_vector("")
 
     def test_generate_random_sequences(self):
-        n_seqs = 5
-        length = 10
-        seqs = generate_random_sequences(n_seqs, length)
-        self.assertEqual(len(seqs), n_seqs)
-        self.assertTrue(all(len(s) == length for s in seqs))
-        self.assertTrue(all(set(s).issubset('ATGC') for s in seqs))
+        # Test with smallest standard kmer size
+        seqs = generate_random_sequences(kmer_size=self.KMER_21)
+        self.assertTrue(all(len(s) == self.KMER_21 for s in seqs))
+
+        # Test with standard kmer sizes
+        for k in self.VALID_KMER_SIZES[:2]:  # Only test first two to avoid memory issues
+            seqs = generate_random_sequences(kmer_size=k)
+            self.assertTrue(all(len(s) == k for s in seqs))
+
+        # Test invalid kmer sizes
+        with self.assertRaises(ValueError):
+            generate_random_sequences(kmer_size=20)  # Not in valid sizes
+        
+        # Test warning for large kmer sizes
+        with self.assertWarns(Warning):
+            generate_random_sequences(kmer_size=self.KMER_41)
 
     def test_get_entropy(self):
         # Test uniform sequence
@@ -141,18 +166,24 @@ class TestBiologicalKmers(unittest.TestCase):
 
     def test_predict_kmer(self):
         try:
-            # Test valid k-mer
-            valid_kmer = "A" * 31  # Create valid length k-mer
+            # Test valid k-mer using standard size
+            valid_kmer = "A" * self.KMER_31
             result = predict_kmer(valid_kmer)
             self.assertIn(result, ["Biological", "Artifact"])
             
+            # Test with different valid kmer sizes
+            for size in self.VALID_KMER_SIZES[:2]:  # Test first two sizes
+                test_kmer = "A" * size
+                result = predict_kmer(test_kmer)
+                self.assertIn(result, ["Biological", "Artifact"])
+                
             # Test invalid k-mer length
             with self.assertRaises(ValueError):
-                predict_kmer("AT")
+                predict_kmer("AT")  # Too short
                 
             # Test invalid characters
             with self.assertRaises(ValueError):
-                predict_kmer("ATGCN" * 6 + "A")
+                predict_kmer("N" * self.KMER_31)
                 
         except Exception as e:
             self.fail(f"Test failed with error: {str(e)}")
@@ -283,6 +314,71 @@ class TestBiologicalKmers(unittest.TestCase):
             
         except Exception as e:
             self.fail(f"Test failed with error: {str(e)}")
+
+    def test_uniprot_loading(self):
+        try:
+            # Test loading UniProt SwissProt database
+            sequences, labels = load_uniprot_data(UNIPROT_SPROT_PATH)
+            self.assertIsNotNone(sequences)
+            self.assertIsNotNone(labels)
+            self.assertEqual(len(sequences), len(labels))
+            
+            # Test sequence validity
+            for seq in sequences[:100]:
+                self.assertTrue(all(c in 'ATGC' for c in seq))
+                self.assertGreaterEqual(len(seq), min(self.VALID_KMER_SIZES))
+        
+        except Exception as e:
+            self.fail(f"UniProt loading failed: {str(e)}")
+
+    def test_supervised_learning_uniprot(self):
+        try:
+            # Train on UniProt data
+            X_train, X_test, y_train, y_test = prepare_uniprot_data(UNIPROT_SPROT_PATH)
+            
+            # Test model training
+            clf = train_kmer_classifier(X_train, y_train)
+            self.assertIsInstance(clf, SGDClassifier)
+            
+            # Evaluate performance
+            score = clf.score(X_test, y_test)
+            self.assertGreater(score, 0.7)  # Expect at least 70% accuracy
+            
+            # Test with specific SwissProt sequences
+            test_seqs = ["ATGGCCGACTACAAGGACGACGACGACAAG",  # FLAG tag
+                        "ATGTACCCATACGATGTTCCAGATTACGCT"]   # HA tag
+            for seq in test_seqs:
+                pred = predict_kmer(seq, clf)
+                self.assertIn(pred, ["Biological", "Artifact"])
+                
+        except Exception as e:
+            self.fail(f"Supervised learning failed: {str(e)}")
+
+    def test_incremental_learning_uniprot(self):
+        try:
+            # Test incremental learning on UniProt chunks
+            data_chunks = get_uniprot_chunks(UNIPROT_SPROT_PATH, chunk_size=1000)
+            clf = SGDClassifier(random_state=42)
+            
+            accuracies = []
+            for i, (X_chunk, y_chunk) in enumerate(data_chunks):
+                if i == 0:
+                    clf.partial_fit(X_chunk, y_chunk, classes=np.array([0, 1]))
+                else:
+                    clf.partial_fit(X_chunk, y_chunk)
+                
+                if i % 5 == 0 and i > 0:
+                    score = clf.score(X_chunk, y_chunk)
+                    accuracies.append(score)
+                    
+                if i >= 20:  # Test with first 20 chunks
+                    break
+            
+            # Verify learning improvement
+            self.assertGreater(accuracies[-1], accuracies[0])
+            
+        except Exception as e:
+            self.fail(f"Incremental learning failed: {str(e)}")
 
 if __name__ == '__main__':
     unittest.main()

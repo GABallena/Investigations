@@ -56,35 +56,55 @@ def get_curved_path(start, end, tension=1.2):
     return curve_x, curve_y
 
 def get_curved_path_with_gradient(start, end, tension=1.2):
-    """Generate straight radial paths from center with color gradient"""
+    """Generate chord-like paths with strong self-attraction"""
     center = np.array([0, 0])
     start = np.array(start)
     end = np.array(end)
     
-    # Calculate angles
+    # Calculate angles and distances
     start_angle = np.arctan2(start[1], start[0])
     end_angle = np.arctan2(end[1], end[0])
+    start_dist = np.linalg.norm(start)
     end_dist = np.linalg.norm(end)
     
-    # Create points along path with more segments for smoother gradient
-    num_segments = 50
+    # Calculate angle difference and direction
+    angle_diff = (end_angle - start_angle + np.pi) % (2 * np.pi) - np.pi
+    angle_mid = start_angle + angle_diff / 2
+    
+    # Create control points for tight curve
+    # Pull control points inward more dramatically
+    radius_ctrl = min(start_dist, end_dist) * 0.1  # Much closer to center
+    ctrl1 = np.array([
+        radius_ctrl * np.cos(start_angle + angle_diff * 0.2),
+        radius_ctrl * np.sin(start_angle + angle_diff * 0.2)
+    ])
+    ctrl2 = np.array([
+        radius_ctrl * np.cos(end_angle - angle_diff * 0.2),
+        radius_ctrl * np.sin(end_angle - angle_diff * 0.2)
+    ])
+    
+    # Generate curve points with more segments for smoother appearance
+    num_segments = 100
     t = np.linspace(0, 1, num_segments)
     
-    # Generate path coordinates
-    mid_angle = (start_angle + end_angle) / 2
-    r = np.interp(t, [0, 1], [0, end_dist])
-    angle = np.interp(t, [0, 1], [mid_angle, end_angle])
-    
-    x = r * np.cos(angle)
-    y = r * np.sin(angle)
+    # Create Bezier curve with stronger inward pull
+    curve_x = (1-t)**3 * start[0] + \
+              3*t*(1-t)**2 * ctrl1[0] + \
+              3*t**2*(1-t) * ctrl2[0] + \
+              t**3 * end[0]
+              
+    curve_y = (1-t)**3 * start[1] + \
+              3*t*(1-t)**2 * ctrl1[1] + \
+              3*t**2*(1-t) * ctrl2[1] + \
+              t**3 * end[1]
     
     # Create color gradient from red to blue
     colors = np.zeros((len(t), 4))
     colors[:, 0] = np.interp(t, [0, 1], [1, 0])  # Red component
     colors[:, 2] = np.interp(t, [0, 1], [0, 1])  # Blue component
-    colors[:, 3] = 0.3  # Alpha
+    colors[:, 3] = 0.15  # Reduced alpha for better overlap appearance
     
-    return x, y, colors
+    return curve_x, curve_y, colors
 
 def connection_bundle(from_nodes, to_nodes, pos, alpha=0.2, color='skyblue', width=0.9, tension=1):
     """Create connection bundle visualization"""
@@ -297,35 +317,27 @@ G_sub = G
 pos = grouped_circular_layout(G_sub, [arg_nodes, genus_nodes, eco_nodes], genus_groups, pathogenic_species)
 
 # Draw edges with bundling first (so they're behind nodes)
-# First draw ARG connections
-for start in arg_nodes:
+# First draw taxa -> ARG connections
+for start in genus_nodes:
     for end in G.neighbors(start):
-        if end in genus_nodes or end in eco_nodes:
+        if end in arg_nodes:
             curve_x, curve_y, colors = get_curved_path_with_gradient(pos[start], pos[end])
             # Draw gradient line segment by segment
             for i in range(len(curve_x)-1):
                 plt.plot(curve_x[i:i+2], curve_y[i:i+2], 
                         color=colors[i],
-                        linewidth=0.3)
+                        linewidth=0.2)
 
-# Then draw environment-taxa connections
-for eco_node in eco_nodes:
-    eco_name = eco_node.split('_')[1]
-    eco_category = 'unknown'
-    for category, keywords in ecosystem_categories.items():
-        if any(keyword.lower() in eco_name.lower() for keyword in keywords):
-            eco_category = category
-            break
-    
-    # Connect to all neighbor genera
-    for genus_node in G.neighbors(eco_node):
-        if genus_node in genus_nodes:  # ensure it's a genus node
-            curve_x, curve_y, colors = get_curved_path_with_gradient(pos[eco_node], pos[genus_node])
+# Then draw taxa -> ecosystem connections
+for start in genus_nodes:
+    for end in G.neighbors(start):
+        if end in eco_nodes:
+            curve_x, curve_y, colors = get_curved_path_with_gradient(pos[start], pos[end])
             # Draw gradient line segment by segment
             for i in range(len(curve_x)-1):
                 plt.plot(curve_x[i:i+2], curve_y[i:i+2], 
                         color=colors[i],
-                        linewidth=0.2)
+                        linewidth=0.15)
 
 # Draw nodes with type-specific colors
 for node in G_sub.nodes():
@@ -473,7 +485,7 @@ draw_taxonomy_arcs(node_angles, taxonomy_hierarchy)
 plt.title("Edge Bundle Visualization\n" +
           "Orange: ARGs | Red: Pathogenic Taxa | Grey: Other Taxa\n" +
           "Ecosystem colors: Orange: Host-associated | Green: Engineered | Blue: Environmental\n" +
-          "Outer arcs show taxonomic relationships | Edge colors: Red → Blue shows direction",
+          "Outer arcs show taxonomic relationships | Edge colors: Red → Blue shows flow from Taxa",
           fontsize=16, pad=20)
 
 # Save and close
@@ -484,3 +496,94 @@ plt.savefig('edge_bundle.png',
            facecolor='white',
            edgecolor='none')
 plt.close()
+
+# Add new visualization functions
+def create_arg_ecosystem_heatmaps(df):
+    """Create three separate heatmaps for each ecosystem category"""
+    # Process ARG and ecosystem data
+    arg_eco_counts = {}
+    eco_categories = {}
+    
+    for _, row in df.iterrows():
+        if isinstance(row['arg_genes'], str) and isinstance(row['ecosystem'], str):
+            args = row['arg_genes'].split(';')
+            eco = row['ecosystem']
+            # Determine ecosystem category
+            for category, keywords in ecosystem_categories.items():
+                if any(keyword.lower() in eco.lower() for keyword in keywords):
+                    eco_categories[eco] = category
+                    break
+            if eco not in eco_categories:
+                eco_categories[eco] = 'unknown'
+            
+            for arg in args:
+                if arg.strip():
+                    key = (arg.strip(), eco)
+                    arg_eco_counts[key] = arg_eco_counts.get(key, 0) + 1
+    
+    # Create figure with three subplots
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 10))
+    
+    # Process each ecosystem category separately
+    categories = ['Host-associated', 'Environmental', 'Engineered']
+    axes = [ax1, ax2, ax3]
+    
+    for ax, category in zip(axes, categories):
+        # Filter ecosystems for this category
+        category_ecos = [eco for eco, cat in eco_categories.items() if cat == category]
+        if not category_ecos:
+            continue
+            
+        # Get all ARGs that appear in this category
+        category_args = set()
+        for (arg, eco), count in arg_eco_counts.items():
+            if eco in category_ecos:
+                category_args.add(arg)
+        
+        # Create matrix for this category
+        args_list = sorted(category_args)
+        ecos_list = sorted(category_ecos)
+        matrix = np.zeros((len(args_list), len(ecos_list)))
+        
+        for i, arg in enumerate(args_list):
+            for j, eco in enumerate(ecos_list):
+                matrix[i, j] = arg_eco_counts.get((arg, eco), 0)
+        
+        # Log transform and normalize
+        matrix = np.log1p(matrix)
+        matrix = matrix / (matrix.max() if matrix.max() > 0 else 1)
+        
+        # Plot heatmap
+        im = ax.imshow(matrix, aspect='auto', cmap='YlOrRd')
+        plt.colorbar(im, ax=ax, label='Normalized log frequency')
+        
+        # Customize axes
+        ax.set_yticks(range(len(args_list)))
+        ax.set_yticklabels(args_list, fontsize=8)
+        ax.set_xticks(range(len(ecos_list)))
+        ax.set_xticklabels(ecos_list, rotation=45, ha='right', fontsize=8)
+        
+        # Add title
+        ax.set_title(f'{category} Ecosystems', pad=20)
+    
+    plt.suptitle('ARG Distribution Across Different Ecosystem Types', y=1.05, fontsize=16)
+    plt.tight_layout()
+    plt.savefig('arg_ecosystem_heatmaps.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+# Update the visualization call
+print("\nGenerating ARG-Ecosystem heatmaps...")
+create_arg_ecosystem_heatmaps(df)
+print("Heatmaps saved as 'arg_ecosystem_heatmaps.png'")
+
+# Save summary statistics
+print("\nSaving network statistics...")
+with open('network_stats.txt', 'w') as f:
+    f.write(f"Network Statistics\n")
+    f.write(f"=================\n")
+    f.write(f"ARG nodes: {len(arg_nodes)}\n")
+    f.write(f"Genus nodes: {len(genus_nodes)}\n")
+    f.write(f"Ecosystem nodes: {len(eco_nodes)}\n")
+    f.write(f"Total edges: {G.number_of_edges()}\n")
+
+print("Analysis complete!")

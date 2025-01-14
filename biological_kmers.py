@@ -104,18 +104,18 @@ import networkx as nx
 # Update CONFIG structure for better organization
 CONFIG = {
     'PATHS': {
-        'log_file': 'biological_kmers.log',
-        'model_dir': 'models',
-        'data_dir': 'data',
-        'output_dir': 'output',
-        'temp_dir': '/tmp/biological_kmers',
-        'cache_dir': 'cache',
-        'databases': {
-            'hmm': 'Pfam-A.hmm',
-            'biological_sequences': 'core_nt', # Combined reference/blast database
-            'contaminants': 'contaminants'
-        }
-    },
+            'log_file': os.path.join(os.getcwd(), 'logs', 'biological_kmers.log'),
+            'model_dir': os.path.join(os.getcwd(), 'models'),
+            'data_dir': os.path.join(os.getcwd(), 'data'),
+            'output_dir': os.path.join(os.getcwd(), 'output'),
+            'temp_dir': '/tmp/biological_kmers',
+            'cache_dir': os.path.join(os.getcwd(), 'cache'),
+            'databases': {
+                'hmm': os.path.join(os.getcwd(), 'data', 'hmm', 'Pfam-A.hmm'),
+                'biological_sequences': os.path.join(os.getcwd(), 'data', 'sequences', 'uniprot_sprot.fasta'),
+                'contaminants': os.path.join(os.getcwd(), 'data', 'contaminants')
+            }
+        },
     'MODEL': {
         'kmer': {
             'size': 31,
@@ -1119,7 +1119,7 @@ def extract_known_kmers(sequence, k_size=31):
     return known_kmers
 
 # Update create_kmer_dataset to use event-aware extraction
-def create_kmer_dataset(fasta_file, phylome_file=None, alignment_file=None, 
+def create_kmer_dataset(fasta_file="uniprot_sprot.fasta", phylome_file=None, alignment_file=None, 
                        k_size=config_manager.get('MODEL', 'kmer', 'size'), 
                        negative_sample_size=None, event_tolerance=True, 
                        include_known_elements=True, chunk_size=config_manager.get('MODEL', 'training', 'batch_size'), 
@@ -2632,36 +2632,23 @@ def generate_random_kmers(n, k=31):
     return [''.join(np.random.choice(bases, k)) for _ in range(n)]
 
 if __name__ == "__main__":
-    # Example usage for metagenomic analysis
+    # Example usage for biological sequence analysis
     logger = setup_logging()
-    logger.info("Starting metagenomic k-mer analysis")
+    logger.info("Starting biological k-mer analysis")
     
     try:
-        # Load example metagenomic reads
-        with open("metagenome_reads.fasta", "r") as f:
-            sequences = [str(record.seq) for record in SeqIO.parse(f, "fasta")]
+        # Get database path from config
+        fasta_path = config_manager.get('PATHS', 'databases', 'biological_sequences')
         
-        # Extract k-mers
-        k = 31
-        kmers = []
-        for seq in sequences:
-            kmers.extend([seq[i:i+k] for i in range(len(seq)-k+1)])
+        # Train and evaluate model
+        clf, metrics = train_kmer_classifier(fasta_path)
         
-        # Train model
-        clf = train_kmer_classifier(kmers)
-        
-        # Test predictions
-        test_kmers = generate_random_kmers(100)
-        predictions = []
-        for kmer in test_kmers:
-            features = create_feature_vector(kmer)
-            pred = clf.predict_proba([features])[0][1]
-            predictions.append(pred)
-        
-        # Analyze results
-        biological_kmers = [k for k, p in zip(test_kmers, predictions) if p > 0.8]
-        logger.info(f"Found {len(biological_kmers)} likely biological k-mers")
-        
+        # Save model if performance is good
+        if metrics['f1'] > 0.8:
+            model_handler = ModelPersistence()
+            model_handler.save_model(clf, metadata={'metrics': metrics})
+            logger.info("Model saved successfully")
+            
     except Exception as e:
         logger.error("Analysis failed", exc_info=True)
         raise
@@ -4489,3 +4476,599 @@ if __name__ == "__main__":
     
     # Add visualization of results
     visualize_analysis_results(clf, X_test, y_test, sequences, manifold)
+
+# Add protein translation handling and k-mer generation from reverse-translated sequences
+
+def reverse_translate_protein(protein_seq):
+    """Reverse translate protein sequence to DNA using most common codons."""
+    # Most common codons per amino acid (based on human genome)
+    codon_table = {
+        'A': 'GCC', 'C': 'TGC', 'D': 'GAC', 'E': 'GAG',
+        'F': 'TTC', 'G': 'GGC', 'H': 'CAC', 'I': 'ATC',
+        'K': 'AAG', 'L': 'CTG', 'M': 'ATG', 'N': 'AAC',
+        'P': 'CCC', 'Q': 'CAG', 'R': 'CGG', 'S': 'AGC',
+        'T': 'ACC', 'V': 'GTG', 'W': 'TGG', 'Y': 'TAC',
+        '*': 'TGA', 'X': 'NNN', 'B': 'GAY', 'Z': 'GAR',
+        'J': 'MTY', 'U': 'TGA'  # Special cases
+    }
+    
+    return ''.join(codon_table.get(aa, 'NNN') for aa in protein_seq.upper())
+
+def get_all_codons_for_aa(aa):
+    """Get all possible codons for an amino acid.
+    
+    Args:
+        aa (str): Single letter amino acid code
+        
+    Returns:
+        list: All possible codons for the amino acid
+    """
+    # Standard genetic code with all possible codons
+    codon_table = {
+        'A': ['GCT', 'GCC', 'GCA', 'GCG'],
+        'C': ['TGT', 'TGC'],
+        'D': ['GAT', 'GAC'],
+        'E': ['GAA', 'GAG'],
+        'F': ['TTT', 'TTC'],
+        'G': ['GGT', 'GGC', 'GGA', 'GGG'],
+        'H': ['CAT', 'CAC'],
+        'I': ['ATT', 'ATC', 'ATA'],
+        'K': ['AAA', 'AAG'],
+        'L': ['TTA', 'TTG', 'CTT', 'CTC', 'CTA', 'CTG'],
+        'M': ['ATG'],
+        'N': ['AAT', 'AAC'],
+        'P': ['CCT', 'CCC', 'CCA', 'CCG'],
+        'Q': ['CAA', 'CAG'],
+        'R': ['CGT', 'CGC', 'CGA', 'CGG', 'AGA', 'AGG'],
+        'S': ['TCT', 'TCC', 'TCA', 'TCG', 'AGT', 'AGC'],
+        'T': ['ACT', 'ACC', 'ACA', 'ACG'],
+        'V': ['GTT', 'GTC', 'GTA', 'GTG'],
+        'W': ['TGG'],
+        'Y': ['TAT', 'TAC'],
+        '*': ['TAA', 'TAG', 'TGA'],
+        'X': ['NNN'],
+        'B': ['GAT', 'GAC'],  # Aspartic acid or Asparagine
+        'Z': ['GAA', 'GAG', 'CAA', 'CAG'],  # Glutamic acid or Glutamine
+        'J': ['ATT', 'ATC', 'ATA', 'CTT', 'CTC', 'CTA', 'CTG', 'TTA', 'TTG'],  # Leucine or Isoleucine
+        'U': ['TGA']  # Selenocysteine
+    }
+    return codon_table.get(aa.upper(), ['NNN'])
+
+def generate_all_reverse_translations(protein_seq, max_sequences=10000):
+    """Generate all possible DNA sequences for a protein sequence.
+    
+    Args:
+        protein_seq (str): Input protein sequence
+        max_sequences (int): Maximum number of sequences to generate
+        
+    Returns:
+        generator: Generator yielding possible DNA sequences
+    """
+    # Get possible codons for first amino acid
+    current_sequences = get_all_codons_for_aa(protein_seq[0])
+    
+    # Iteratively build sequences for each subsequent amino acid
+    for aa in protein_seq[1:]:
+        possible_codons = get_all_codons_for_aa(aa)
+        new_sequences = []
+        
+        # Calculate how many sequences we'll have after adding this amino acid
+        total_combinations = len(current_sequences) * len(possible_codons)
+        
+        # If we'll exceed max_sequences, sample randomly
+        if total_combinations > max_sequences:
+            current_sequences = np.random.choice(current_sequences, 
+                                              size=max_sequences//len(possible_codons),
+                                              replace=False)
+        
+        # Add all possible codons to current sequences
+        for seq in current_sequences:
+            for codon in possible_codons:
+                new_sequences.append(seq + codon)
+                
+                # Yield sequence if we're at max to avoid memory issues
+                if len(new_sequences) >= max_sequences:
+                    yield from new_sequences
+                    new_sequences = []
+        
+        current_sequences = new_sequences
+        
+        # Break if we've generated enough sequences
+        if len(current_sequences) >= max_sequences:
+            break
+    
+    # Yield any remaining sequences
+    yield from current_sequences
+
+def create_kmer_dataset(fasta_file="uniprot_sprot.fasta", phylome_file=None, alignment_file=None, 
+                       k_size=config_manager.get('MODEL', 'kmer', 'size'), 
+                       negative_sample_size=None, event_tolerance=True, 
+                       include_known_elements=True, chunk_size=config_manager.get('MODEL', 'training', 'batch_size'), 
+                       hmm_db_path=config_manager.get('PATHS', 'databases', 'hmm'),
+                       max_translations_per_protein=1000):
+    """Create dataset with streaming data handling using all possible reverse translations."""
+    X, y = [], []
+    biological_kmers = BloomFilter(1000000, 5)
+    
+    # Process protein sequences in chunks
+    for chunk in sequence_generator(fasta_file, chunk_size):
+        chunk_kmers = set()
+        
+        # Process each protein sequence
+        for protein_seq in chunk:
+            # Generate all possible DNA sequences
+            for dna_seq in generate_all_reverse_translations(protein_seq, 
+                                                           max_sequences=max_translations_per_protein):
+                if 'N' in dna_seq:
+                    continue
+                    
+                # Generate k-mers from this DNA sequence
+                for i in range(len(dna_seq) - k_size + 1):
+                    kmer = dna_seq[i:i+k_size]
+                    if 'N' not in kmer and kmer not in chunk_kmers:
+                        chunk_kmers.add(kmer)
+                        biological_kmers.add(kmer)
+                        features = create_feature_vector(kmer, hmm_db_path=hmm_db_path)
+                        X.append(features)
+                        y.append(1)
+        
+        # Generate negative examples for this chunk
+        chunk_size = len(X)
+        random_kmers = list(generate_random_kmers(chunk_size, k_size))
+        
+        for kmer in random_kmers:
+            if kmer not in biological_kmers:
+                features = create_feature_vector(kmer, hmm_db_path=hmm_db_path)
+                X.append(features)
+                y.append(0)
+        
+        # Process in batches
+        if len(X) >= chunk_size * 2:
+            X_chunk = np.array(X)
+            y_chunk = np.array(y)
+            yield X_chunk, y_chunk
+            X, y = [], []
+    
+    # Yield remaining data
+    if X:
+        yield np.array(X), np.array(y)
+
+# Update main execution to use Swiss-Prot
+if __name__ == "__main__":
+    logger = setup_logging()
+    logger.info("Starting k-mer analysis using reverse-translated UniProt/Swiss-Prot")
+    
+    try:
+        # Train model using reverse-translated Swiss-Prot sequences
+        clf = train_kmer_classifier()
+        
+        # Test predictions
+        test_kmers = generate_random_kmers(100)
+        predictions = []
+        for kmer in test_kmers:
+            features = create_feature_vector(kmer)
+            pred = clf.predict_proba([features])[0][1]
+            predictions.append(pred)
+        
+        # Analyze results
+        biological_kmers = [k for k, p in zip(test_kmers, predictions) if p > 0.8]
+        logger.info(f"Found {len(biological_kmers)} likely biological k-mers")
+        
+    except Exception as e:
+        logger.error("Analysis failed", exc_info=True)
+        raise
+
+# ...existing imports...
+
+def generate_negative_kmers(k, n_samples=1000):
+    """Generate artificial negative k-mer examples for supervised learning.
+    
+    Args:
+        k (int): K-mer length
+        n_samples (int): Number of negative examples to generate
+        
+    Returns:
+        list: Negative k-mer examples that violate biological patterns
+    """
+    negative_kmers = []
+    strategies = [
+        'extreme_gc',
+        'homopolymer',
+        'invalid_motifs',
+        'palindrome',
+        'repeat_violate'
+    ]
+    
+    samples_per_strategy = n_samples // len(strategies)
+    
+    for strategy in strategies:
+        if strategy == 'extreme_gc':
+            # Generate sequences with extreme GC content
+            for _ in range(samples_per_strategy):
+                if np.random.random() < 0.5:
+                    # Very high GC (>80%)
+                    seq = ''.join(np.random.choice(['G', 'C'], k))
+                else:
+                    # Very low GC (<20%)
+                    seq = ''.join(np.random.choice(['A', 'T'], k))
+                negative_kmers.append(seq)
+                
+        elif strategy == 'homopolymer':
+            # Generate long homopolymer runs
+            for _ in range(samples_per_strategy):
+                base = np.random.choice(['A', 'T', 'G', 'C'])
+                run_length = k // 2  # At least half homopolymer
+                seq = base * run_length
+                # Fill rest randomly
+                seq += ''.join(np.random.choice(['A', 'T', 'G', 'C'], k - run_length))
+                negative_kmers.append(seq)
+                
+        elif strategy == 'invalid_motifs':
+            # Generate sequences with invalid biological motifs
+            invalid_motifs = [
+                'ATATAT',  # Invalid TATA box
+                'GCGCGC',  # Unstable repeat
+                'TTTAAA',  # Weak binding
+                'CCCCCC'   # Structurally unstable
+            ]
+            for _ in range(samples_per_strategy):
+                motif = np.random.choice(invalid_motifs)
+                pos = np.random.randint(0, k - len(motif))
+                seq = ''.join(np.random.choice(['A', 'T', 'G', 'C'], pos))
+                seq += motif
+                seq += ''.join(np.random.choice(['A', 'T', 'G', 'C'], k - pos - len(motif)))
+                negative_kmers.append(seq)
+                
+        elif strategy == 'palindrome':
+            # Generate sequences with too many palindromes
+            for _ in range(samples_per_strategy):
+                half = k // 2
+                first_half = ''.join(np.random.choice(['A', 'T', 'G', 'C'], half))
+                # Create perfect palindrome
+                complement = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
+                second_half = ''.join(complement[base] for base in reversed(first_half))
+                seq = first_half + second_half
+                if len(seq) < k:  # Add random base if k is odd
+                    seq += np.random.choice(['A', 'T', 'G', 'C'])
+                negative_kmers.append(seq)
+                
+        elif strategy == 'repeat_violate':
+            # Generate sequences with invalid repeat patterns
+            for _ in range(samples_per_strategy):
+                repeat_unit = ''.join(np.random.choice(['A', 'T', 'G', 'C'], 3))
+                repeats = k // len(repeat_unit)
+                seq = repeat_unit * repeats
+                if len(seq) < k:
+                    seq += repeat_unit[:k-len(seq)]
+                negative_kmers.append(seq)
+    
+    # Add violation of codon structure
+    while len(negative_kmers) < n_samples:
+        seq = ''.join(np.random.choice(['A', 'T', 'G', 'C'], k))
+        # Ensure sequence disrupts codon periodicity
+        if len(seq) >= 6:  # Need at least 2 codons
+            # Insert base to shift reading frame
+            pos = np.random.randint(3, len(seq)-3)
+            seq = seq[:pos] + np.random.choice(['A', 'T', 'G', 'C']) + seq[pos:-1]
+        negative_kmers.append(seq[:k])
+    
+    # Verify sequences are unique
+    negative_kmers = list(set(negative_kmers))
+    
+    # If we lost some sequences due to duplicates, generate more
+    while len(negative_kmers) < n_samples:
+        seq = ''.join(np.random.choice(['A', 'T', 'G', 'C'], k))
+        negative_kmers.append(seq)
+    
+    return negative_kmers[:n_samples]
+
+def verify_negative_kmer(kmer):
+    """Verify that a k-mer is likely to be a true negative example.
+    
+    Args:
+        kmer (str): K-mer sequence to verify
+        
+    Returns:
+        bool: True if sequence is likely a true negative
+    """
+    # Check for extreme GC content
+    gc_content = (kmer.count('G') + kmer.count('C')) / len(kmer)
+    if gc_content > 0.8 or gc_content < 0.2:
+        return True
+        
+    # Check for homopolymer runs
+    for base in 'ATGC':
+        if base * (len(kmer)//2) in kmer:
+            return True
+    
+    # Check for perfect palindromes of significant length
+    half_len = len(kmer) // 2
+    first_half = kmer[:half_len]
+    second_half = kmer[-half_len:]
+    complement = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
+    if all(complement.get(a) == b for a, b in zip(first_half, reversed(second_half))):
+        return True
+    
+    # Check for excessive repeats
+    for length in range(2, 6):
+        for i in range(len(kmer)-length):
+            pattern = kmer[i:i+length]
+            if kmer.count(pattern) > 2:  # More than 2 occurrences of any pattern
+                return True
+    
+    # Check for invalid biological motifs
+    invalid_motifs = [
+        'ATATAT', 'GCGCGC', 'TTTAAA', 'CCCCCC',
+        'GGGGGG', 'AAAAAA', 'TTTTTT'
+    ]
+    if any(motif in kmer for motif in invalid_motifs):
+        return True
+    
+    return False
+
+# Update create_kmer_dataset to use new negative generation
+def create_kmer_dataset(fasta_file="uniprot_sprot.fasta", k_size=31, n_samples=1000):
+    """Create balanced dataset with artificial negative examples."""
+    X, y = [], []
+    
+    # Generate positive examples from biological sequences
+    biological_kmers = set()
+    for record in SeqIO.parse(fasta_file, "fasta"):
+        seq = str(record.seq)
+        for i in range(len(seq) - k_size + 1):
+            kmer = seq[i:i+k_size]
+            if 'N' not in kmer and kmer not in biological_kmers:
+                biological_kmers.add(kmer)
+                features = create_feature_vector(kmer)
+                X.append(features)
+                y.append(1)
+                
+                if len(biological_kmers) >= n_samples:
+                    break
+        if len(biological_kmers) >= n_samples:
+            break
+    
+    # Generate negative examples
+    negative_kmers = generate_negative_kmers(k_size, n_samples)
+    
+    # Create features for negative examples
+    for kmer in negative_kmers:
+        if kmer not in biological_kmers:  # Avoid any overlap
+            features = create_feature_vector(kmer)
+            X.append(features)
+            y.append(0)
+    
+    return np.array(X), np.array(y)
+
+# Example usage in main
+if __name__ == "__main__":
+    logger = setup_logging()
+    logger.info("Starting k-mer analysis with artificial negative examples")
+    
+    try:
+        # Generate balanced dataset
+        X, y = create_kmer_dataset(n_samples=10000)
+        
+        # Train classifier
+        clf = train_kmer_classifier()
+        
+        # Evaluate
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        clf.fit(X_train, y_train)
+        
+        # Test predictions
+        y_pred = clf.predict(X_test)
+        logger.info("\nClassification Report:")
+        logger.info(classification_report(y_test, y_pred))
+        
+    except Exception as e:
+        logger.error("Analysis failed", exc_info=True)
+        raise
+
+# ...existing code...
+
+class DatasetValidator:
+    """Validate and prepare datasets for k-mer classification."""
+    
+    def __init__(self, config=None):
+        self.config = config or config_manager
+        self.blast_db = None
+        self.kmers_seen = BloomFilter(1000000, 5)
+    
+    def setup_blast_db(self, sequences):
+        """Create temporary BLAST database for overlap checking."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta') as temp_file:
+            for i, seq in enumerate(sequences):
+                temp_file.write(f">seq_{i}\n{seq}\n")
+            temp_file.flush()
+            
+            try:
+                subprocess.run(['makeblastdb', '-in', temp_file.name,
+                              '-dbtype', 'nucl', '-out', 'temp_blast_db'],
+                             check=True, capture_output=True)
+                self.blast_db = 'temp_blast_db'
+            except subprocess.CalledProcessError as e:
+                logger.warning(f"BLAST database creation failed: {e}")
+                self.blast_db = None
+
+    def check_sequence_overlap(self, sequence):
+        """Check if sequence has significant overlap with reference database."""
+        if not self.blast_db:
+            return False
+            
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta') as query_file:
+            query_file.write(f">query\n{sequence}\n")
+            query_file.flush()
+            
+            try:
+                result = subprocess.run(['blastn', '-query', query_file.name,
+                                      '-db', self.blast_db, '-outfmt', '6',
+                                      '-perc_identity', '80'],
+                                     check=True, capture_output=True, text=True)
+                return bool(result.stdout.strip())
+            except subprocess.CalledProcessError:
+                return False
+
+    def prepare_dataset(self, fasta_file, k_size=31, negative_sample_size=None):
+        """Prepare validated dataset with both real and synthetic sequences."""
+        biological_kmers = []
+        synthetic_kmers = []
+        
+        # Load biological sequences
+        logger.info("Loading biological sequences...")
+        for record in SeqIO.parse(fasta_file, "fasta"):
+            seq = str(record.seq)
+            for i in range(len(seq) - k_size + 1):
+                kmer = seq[i:i+k_size]
+                if 'N' not in kmer and kmer not in self.kmers_seen:
+                    biological_kmers.append(kmer)
+                    self.kmers_seen.add(kmer)
+        
+        # Setup BLAST database for overlap checking
+        self.setup_blast_db(biological_kmers)
+        
+        # Generate synthetic sequences
+        logger.info("Generating synthetic sequences...")
+        negative_count = 0
+        while negative_count < len(biological_kmers):
+            kmer = self._generate_synthetic_kmer(k_size)
+            if (kmer not in self.kmers_seen and 
+                verify_negative_kmer(kmer) and 
+                not self.check_sequence_overlap(kmer)):
+                synthetic_kmers.append(kmer)
+                self.kmers_seen.add(kmer)
+                negative_count += 1
+        
+        return biological_kmers, synthetic_kmers
+    
+    def _generate_synthetic_kmer(self, k_size):
+        """Generate a single synthetic k-mer using various strategies."""
+        strategies = [
+            lambda: self._extreme_gc_kmer(k_size),
+            lambda: self._homopolymer_kmer(k_size),
+            lambda: self._invalid_motif_kmer(k_size),
+            lambda: self._repeat_violation_kmer(k_size)
+        ]
+        return np.random.choice(strategies)()
+
+    # ... (keep existing synthetic sequence generation methods) ...
+
+def create_balanced_dataset(fasta_file, k_size=31, test_size=0.2):
+    """Create balanced dataset with validation."""
+    validator = DatasetValidator()
+    biological_kmers, synthetic_kmers = validator.prepare_dataset(fasta_file, k_size)
+    
+    # Create features
+    X_bio = np.array([create_feature_vector(kmer) for kmer in biological_kmers])
+    X_syn = np.array([create_feature_vector(kmer) for kmer in synthetic_kmers])
+    
+    # Create labels
+    y_bio = np.ones(len(X_bio))
+    y_syn = np.zeros(len(X_syn))
+    
+    # Combine and shuffle
+    X = np.vstack([X_bio, X_syn])
+    y = np.hstack([y_bio, y_syn])
+    
+    # Split into train/test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, stratify=y)
+    
+    return X_train, X_test, y_train, y_test
+
+class ModelEvaluator:
+    """Comprehensive model evaluation tools."""
+    
+    @staticmethod
+    def evaluate_model(clf, X_test, y_test):
+        """Perform comprehensive model evaluation."""
+        # Get predictions
+        y_pred = clf.predict(X_test)
+        y_prob = clf.predict_proba(X_test)[:, 1]
+        
+        # Calculate metrics
+        metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred),
+            'recall': recall_score(y_test, y_pred),
+            'f1': f1_score(y_test, y_pred),
+            'auc_roc': roc_auc_score(y_test, y_prob),
+            'average_precision': average_precision_score(y_test, y_prob)
+        }
+        
+        # Generate curves
+        fpr, tpr, _ = roc_curve(y_test, y_prob)
+        precision, recall, _ = precision_recall_curve(y_test, y_prob)
+        
+        return metrics, (fpr, tpr), (precision, recall)
+    
+    @staticmethod
+    def plot_learning_curve(clf, X, y, cv=5):
+        """Plot learning curve to assess model behavior with dataset size."""
+        train_sizes, train_scores, test_scores = learning_curve(
+            clf, X, y, cv=cv, n_jobs=-1, 
+            train_sizes=np.linspace(0.1, 1.0, 10))
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(train_sizes, np.mean(train_scores, axis=1), label='Training score')
+        plt.plot(train_sizes, np.mean(test_scores, axis=1), label='Cross-validation score')
+        plt.xlabel('Training examples')
+        plt.ylabel('Score')
+        plt.title('Learning Curve')
+        plt.legend(loc='best')
+        plt.grid(True)
+        plt.show()
+
+def train_kmer_classifier(fasta_file=None, k_size=31):
+    """Enhanced training workflow with validation."""
+    if fasta_file is None:
+        fasta_file = config_manager.get('PATHS', 'databases', 'biological_sequences')
+    
+    # Prepare dataset
+    X_train, X_test, y_train, y_test = create_balanced_dataset(fasta_file, k_size)
+    
+    # Initialize classifier with early stopping
+    clf = SGDClassifier(
+        loss='log_loss',
+        learning_rate='adaptive',
+        early_stopping=True,
+        validation_fraction=0.1,
+        n_iter_no_change=5,
+        random_state=42
+    )
+    
+    # Train model
+    clf.fit(X_train, y_train)
+    
+    # Evaluate model
+    evaluator = ModelEvaluator()
+    metrics, roc_curve, pr_curve = evaluator.evaluate_model(clf, X_test, y_test)
+    
+    # Log results
+    logger.info("\nModel Evaluation Results:")
+    for metric, value in metrics.items():
+        logger.info(f"{metric}: {value:.4f}")
+    
+    # Plot learning curve
+    evaluator.plot_learning_curve(clf, X_train, y_train)
+    
+    return clf, metrics
+
+if __name__ == "__main__":
+    logger = setup_logging()
+    logger.info("Starting enhanced k-mer analysis workflow")
+    
+    try:
+        # Train and evaluate model
+        clf, metrics = train_kmer_classifier()
+        
+        # Save model if performance is good
+        if metrics['f1'] > 0.8:
+            model_handler = ModelPersistence()
+            model_handler.save_model(clf, metadata={'metrics': metrics})
+            logger.info("Model saved successfully")
+            
+    except Exception as e:
+        logger.error("Analysis failed", exc_info=True)
+        raise
+

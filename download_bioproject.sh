@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set BioProject ID
-BIOPROJECT="PRJNA1089772"
+BIOPROJECT="PRJNA391943"
 
 # Step 1: Fetch run accessions
 echo "Fetching run accessions for BioProject $BIOPROJECT..."

@@ -1,0 +1,6 @@
+Network Statistics
+=================
+ARG nodes: 105
+Genus nodes: 710
+Ecosystem nodes: 162
+Total edges: 4830
